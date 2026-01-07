@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro File Shield - Encrypt & Decrypt</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #059669;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            width: 100%;
+            max-width: 650px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .header-tabs {
+            display: flex;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #6b7280;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: white;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .main-content { padding: 30px; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #4b5563; }
+        
+        textarea, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        textarea:focus, input:focus { border-color: var(--primary); }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            padding: 25px;
+            text-align: center;
+            border-radius: 12px;
+            background: #f8fafc;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .drop-zone:hover { border-color: var(--primary); background: #eff6ff; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-enc { background: var(--primary); color: white; }
+        .btn-enc:hover { background: #4338ca; transform: translateY(-2px); }
+        .btn-dec { background: var(--secondary); color: white; }
+        .btn-dec:hover { background: #047857; transform: translateY(-2px); }
+
+        /* Modal */
+        .modal-bg {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop { from { transform: scale(0.8); } to { transform: scale(1); } }
+
+        .modal-box textarea { height: 150px; background: #f1f5f9; font-family: monospace; font-size: 12px; margin-top: 10px; }
+
+        .close-link { margin-top: 15px; display: block; color: #6b7280; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'enc-sec')">🔒 ফাইল লক করুন</button>
+        <button class="tab-btn" onclick="openTab(event, 'dec-sec')">🔓 কোড উদ্ধার করুন</button>
+    </div>
+
+    <div class="main-content">
+        <!-- Encryption -->
+        <div id="enc-sec" class="section active">
+            <label>আপনার কোড বা ডাটা এখানে দিন</label>
+            <textarea id="e_data" placeholder="এখানে আপনার HTML কোড বা টেক্সট লিখুন..."></textarea>
+            
+            <div class="drop-zone" onclick="document.getElementById('e_file').click()">
+                <span id="e_file_name">📁 অথবা ফাইল সিলেক্ট করুন</span>
+                <input type="file" id="e_file" style="display:none">
+            </div>
+
+            <label>সিক্রেট পাসওয়ার্ড</label>
+            <input type="password" id="e_pass" placeholder="পাসওয়ার্ড দিন">
+
+            <label>ডোমেইন লক (ঐচ্ছিক)</label>
+            <input type="text" id="e_domain" placeholder="example.com">
+
+            <button class="btn btn-enc" onclick="startEncryption()">এনক্রিপ্ট ও কোড তৈরি করুন</button>
+        </div>
+
+        <!-- Decryption -->
+        <div id="dec-sec" class="section">
+            <label>এনক্রিপ্টেড HTML কোডটি এখানে পেস্ট করুন</label>
+            <textarea id="d_data" placeholder="সম্পূর্ণ HTML কোড অথবা secretData এর অংশটি এখানে দিন..."></textarea>
+            
+            <div class="drop-zone" onclick="document.getElementById('d_file').click()">
+                <span id="d_file_name">📄 লক করা .html ফাইল আপলোড করুন</span>
+                <input type="file" id="d_file" style="display:none" accept=".html">
+            </div>
+
+            <label>পাসওয়ার্ড দিন</label>
+            <input type="password" id="d_pass" placeholder="পাসওয়ার্ড দিন">
+
+            <button class="btn btn-dec" onclick="startDecryption()">ডিক্রিপ্ট করে ডাটা দেখুন</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-bg">
+    <div class="modal-box">
+        <h3 id="m_title">সফল হয়েছে!</h3>
+        <p style="font-size: 14px; color: #666;">নিচের বক্সে আপনার রেজাল্ট দেওয়া হলো:</p>
+        <textarea id="m_res" readonly></textarea>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn btn-enc" onclick="copyText()">📋 কপি করুন</button>
+            <button class="btn btn-dec" id="m_down">📥 ডাউনলোড</button>
+        </div>
+        <center><span class="close-link" onclick="closeModal()">বন্ধ করুন</span></center>
+    </div>
+</div>
+
+<script>
+    let e_file_b64 = "";
+    let original_filename = "index.html";
+
+    function openTab(evt, name) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(name).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // Encryption File Logic
+    document.getElementById('e_file').onchange = function(e) {
+        let file = e.target.files[0];
+        if(file) {
+            original_filename = file.name;
+            document.getElementById('e_file_name').innerText = "✅ " + file.name;
+            let reader = new FileReader();
+            reader.onload = (ev) => e_file_b64 = ev.target.result;
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Decryption File Logic
+    document.getElementById('d_file').onchange = function(e) {
+        let file = e.target.files[0];
+        if(file) {
+            document.getElementById('d_file_name').innerText = "✅ " + file.name;
+            let reader = new FileReader();
+            reader.onload = (ev) => document.getElementById('d_data').value = ev.target.result;
+            reader.readAsText(file);
+        }
+    };
+
+    function startEncryption() {
+        const data = e_file_b64 || document.getElementById('e_data').value;
+        const pass = document.getElementById('e_pass').value;
+        const dom = document.getElementById('e_domain').value.trim();
+
+        if(!data || !pass) { alert("ডাটা এবং পাসওয়ার্ড দিন!"); return; }
+
+        const encrypted = CryptoJS.AES.encrypt(data, pass).toString();
+        const obfuscatedKey = btoa(pass);
+
+        const template = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Locked File</title><script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"><\/script></head><body style="background:#0f172a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;"><div style="background:#1e293b;padding:40px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid #334155;"><h2>🔒 Protected Content</h2><p>This file is password protected</p><input type="password" id="pw" placeholder="Enter Password" style="padding:12px;border-radius:8px;border:none;width:220px;margin-bottom:20px;text-align:center;"><br><button onclick="unlock()" style="padding:12px 30px;background:linear-gradient(to right,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">Unlock Now</button></div><script>const secretData="${encrypted}";const bdom="${dom}";const bkey="${obfuscatedKey}";window.onload=()=>{if(bdom && window.location.hostname.includes(bdom))unlock(atob(bkey))};function unlock(p){const k=p||document.getElementById('pw').value;try{const dec=CryptoJS.AES.decrypt(secretData,k).toString(CryptoJS.enc.Utf8);if(dec){if(dec.startsWith('data:')){const a=document.createElement('a');a.href=dec;a.download="${original_filename}";a.click()}else{document.open();document.write(dec);document.close()}}else{alert("Wrong Password!")}}catch(e){alert("Error Decrypting!")}}<\/script></body></html>`;
+
+        showModal("এনক্রিপশন সফল!", template, "locked_file.html");
+    }
+
+    function startDecryption() {
+        let input = document.getElementById('d_data').value.trim();
+        const pass = document.getElementById('d_pass').value;
+
+        if(!input || !pass) { alert("কোড এবং পাসওয়ার্ড দিন!"); return; }
+
+        // --- গুরুত্বপূর্ণ অংশ: কোড থেকে secretData খুঁজে বের করা ---
+        let encryptedStr = "";
+        if (input.includes('const secretData="')) {
+            // যদি পুরো HTML পেস্ট করা হয়, তবে শুধু secretData ভ্যালুটি নিবে
+            const match = input.match(/const secretData\s*=\s*["']([^"']+)["']/);
+            if (match && match[1]) {
+                encryptedStr = match[1];
+            }
+        } else {
+            // যদি শুধু কোডটুকু পেস্ট করা হয়
+            encryptedStr = input.replace(/^["']|["']$/g, '');
+        }
+
+        if (!encryptedStr) {
+            alert("সঠিক এনক্রিপ্টেড কোড পাওয়া যায়নি!");
+            return;
+        }
+
+        try {
+            const bytes = CryptoJS.AES.decrypt(encryptedStr, pass);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+            if (decrypted) {
+                showModal("ডিক্রিপশন সফল!", decrypted, "decrypted_file.txt");
+            } else {
+                alert("ভুল পাসওয়ার্ড অথবা ডাটা সঠিক নয়!");
+            }
+        } catch (e) {
+            alert("ডিক্রিপশন ব্যর্থ হয়েছে! কোডটি ঠিকভাবে কপি হয়েছে কি না চেক করুন।");
+        }
+    }
+
+    function showModal(title, content, dlName) {
+        document.getElementById('m_title').innerText = title;
+        document.getElementById('m_res').value = content;
+        document.getElementById('modal').style.display = 'flex';
+        
+        document.getElementById('m_down').onclick = () => {
+            const blob = new Blob([content], {type: "text/plain"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = dlName;
+            a.click();
+        };
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    function copyText() {
+        const res = document.getElementById('m_res');
+        res.select();
+        document.execCommand('copy');
+        alert("কপি করা হয়েছে!");
+    }
+</script>
+
+</body>
+</html>
