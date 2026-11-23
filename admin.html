@@ -6,6 +6,7 @@
   <title>ArrowFlow – Admin Control Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
@@ -472,7 +473,15 @@
 
   const SUPABASE_URL = 'https://tffhcvazfkltjzsssyry.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sXuv47Ahqqt5v6StFin9cg__G3PmVHS';
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const ADMIN_EMAIL = 'mdfirozhossain2007@gmail.com';
+  if (!window.supabase?.createClient) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const e = document.getElementById('auth-error');
+      if (e) { e.textContent = 'Supabase library load হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করে পেজ Reload করুন।'; e.classList.remove('hidden'); }
+    });
+    throw new Error('Supabase JavaScript SDK unavailable');
+  }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
   const DEFAULT_PAYMENT_METHODS = [
     { id: 'ton', name: 'TON Wallet', icon: '💎', placeholder: 'Enter TON Wallet Address (UQ... / EQ...)', minWithdraw: 0.50, note: 'Fast TON network payout', enabled: true },
@@ -500,23 +509,33 @@
   // Handle Gmail + Password Login via Supabase Auth
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('admin-email').value.trim();
+    const email = document.getElementById('admin-email').value.trim().toLowerCase();
     const password = document.getElementById('admin-password').value;
     const errBox = document.getElementById('auth-error');
     const btn = document.getElementById('btn-login');
 
     errBox.classList.add('hidden');
+    if (email !== ADMIN_EMAIL) {
+      errBox.textContent = `এই প্যানেলের অনুমোদিত Admin Email: ${ADMIN_EMAIL}`;
+      errBox.classList.remove('hidden');
+      return;
+    }
     btn.disabled = true;
     btn.textContent = '⏳ Signing in...';
 
     try {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (data?.user) {
-        enterDashboard(data.user);
+      if (!data?.user || (data.user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+        await sb.auth.signOut();
+        throw new Error('এই অ্যাকাউন্টটি Admin হিসেবে অনুমোদিত নয়।');
       }
+      await enterDashboard(data.user);
     } catch (err) {
-      errBox.textContent = err.message || 'Invalid Gmail or Password.';
+      const msg = err.message || 'Login failed.';
+      errBox.textContent = /invalid login credentials/i.test(msg)
+        ? 'ইমেইল/পাসওয়ার্ড ভুল অথবা Supabase Authentication → Users-এ এই Admin user তৈরি/Confirm করা নেই। Supabase-এ user তৈরি করে সঠিক password দিয়ে আবার চেষ্টা করুন।'
+        : msg;
       errBox.classList.remove('hidden');
     } finally {
       btn.disabled = false;
@@ -525,6 +544,13 @@
   });
 
   async function enterDashboard(user) {
+    if ((user?.email || '').toLowerCase() !== ADMIN_EMAIL) {
+      await sb.auth.signOut();
+      document.getElementById('auth-screen').classList.remove('hidden');
+      const e = document.getElementById('auth-error');
+      e.textContent = `Unauthorized account. Use ${ADMIN_EMAIL}`; e.classList.remove('hidden');
+      return;
+    }
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
     document.getElementById('logged-admin-email').textContent = user.email || 'Admin';
@@ -532,10 +558,13 @@
   }
 
   // Check active session on page load
-  sb.auth.getSession().then(({ data }) => {
-    if (data?.session?.user) {
-      enterDashboard(data.session.user);
-    }
+  sb.auth.getSession().then(async ({ data, error }) => {
+    if (error) throw error;
+    if (data?.session?.user) await enterDashboard(data.session.user);
+  }).catch(err => {
+    const e = document.getElementById('auth-error');
+    e.textContent = 'Session check failed: ' + (err.message || 'Please reload.');
+    e.classList.remove('hidden');
   });
 
   // Add Payment Method Handler
