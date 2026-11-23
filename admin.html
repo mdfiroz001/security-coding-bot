@@ -408,30 +408,32 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
             <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="1" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Room / Board Size<input id="lvl-board" type="number" min="5" max="30" value="5" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Total Arrows<input id="lvl-arrows" type="number" min="3" value="8" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Total Arrows<input id="lvl-arrows" type="number" min="3" value="8" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"><span id="lvl-capacity-info" class="block mt-1 text-[10px] text-blue-600">Choose board size to see arrow capacity</span></label>
             <label class="text-xs font-bold">Time Limit (seconds)<input id="lvl-time" type="number" min="1" value="90" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Room Theme<select id="lvl-theme" class="mt-1 w-full p-3 border rounded-xl"><option value="classic">Classic White</option><option value="ocean">Ocean Blue</option><option value="midnight">Midnight Dark</option><option value="forest">Forest Green</option><option value="sunset">Sunset Warm</option></select></label>
           </div>
           <div class="mt-4 rounded-2xl border border-blue-100 bg-slate-950 p-4 text-white"><div class="flex items-center justify-between gap-2 mb-3"><b class="text-sm">LIVE LEVEL PREVIEW</b><span id="lvl-preview-meta" class="text-[11px] text-blue-200">5×5 · 8 arrows</span></div><div id="lvl-preview-board" class="mx-auto grid gap-[2px] max-w-[420px] aspect-square rounded-xl bg-slate-700 p-2"></div><p class="text-[10px] text-slate-300 mt-2">Board size ও arrow count বদলালে Preview সঙ্গে সঙ্গে আপডেট হবে।</p></div>
-          <p class="text-[11px] text-slate-500 mt-3">Level 1 থেকে সর্বোচ্চ Level পর্যন্ত তালিকায় দেখা ও Edit করা যাবে। বড় বোর্ডে গেমের Arrow চিকন হবে এবং বেশি Arrow বসবে।</p>
+          <p class="text-[11px] text-slate-500 mt-3">বোর্ড সাইজ অনুযায়ী সর্বোচ্চ Arrow Capacity দেখাবে। Auto Generate দিয়ে পরবর্তী লেভেলগুলো তৈরি হবে; লেভেল বাড়ার সঙ্গে বোর্ড, Arrow Density, Path Length ও Blocker Difficulty বাড়বে।</p>
+          <div class="grid grid-cols-2 gap-3 mt-3"><label class="text-xs font-bold">Generate starting level<input id="lvl-auto-start" type="number" min="1" value="101" class="mt-1 w-full p-3 border rounded-xl"></label><label class="text-xs font-bold">How many levels<input id="lvl-auto-count" type="number" min="1" max="5000" value="100" class="mt-1 w-full p-3 border rounded-xl"></label></div>
           <div class="flex flex-wrap gap-2 mt-4">
             <button onclick="adminApp.saveGameLevel()" class="px-5 py-3 rounded-xl bg-blue-600 text-white text-xs font-black">SAVE / UPDATE LEVEL</button>
+            <button onclick="adminApp.generateNextLevels()" class="px-5 py-3 rounded-xl bg-violet-600 text-white text-xs font-black">AUTO GENERATE NEXT LEVELS</button>
             <button onclick="adminApp.loadGameLevels()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-black">REFRESH LEVELS</button>
           </div>
           <div id="admin-level-list" class="mt-5 space-y-2"><p class="text-xs text-slate-400">Loading levels…</p></div>
         </div>
         <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
           <h2 class="text-lg font-black text-slate-900">Telegram Bot Messenger</h2>
-          <p class="text-xs text-slate-500 mt-1">Send text or photo with Telegram inline URL buttons. Bot token is used only for this request and is not saved in the browser or database.</p>
+          <p class="text-xs text-slate-500 mt-1">Bot Token একবার Save করলেই হবে। Chat ID ঘরে <b>All</b> লিখলে app_users-এ থাকা সব Telegram ইউজারকে Broadcast যাবে।</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <label class="text-xs font-bold">Bot Token<input id="tg-bot-token" type="password" autocomplete="off" placeholder="123456:ABC..." class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Chat ID<input id="tg-chat-id" type="text" placeholder="@channel or numeric chat ID" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Bot Token<input id="tg-bot-token" type="password" autocomplete="new-password" placeholder="Paste token once, then Save" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Chat ID<input id="tg-chat-id" type="text" placeholder="All অথবা numeric Chat ID" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold sm:col-span-2">Message<textarea id="tg-message" rows="3" placeholder="Write your Telegram message…" class="mt-1 w-full p-3 border rounded-xl"></textarea></label>
             <label class="text-xs font-bold sm:col-span-2">Image URL (optional)<input id="tg-image-url" type="url" placeholder="https://example.com/image.jpg" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Inline button text<input id="tg-button-text" type="text" placeholder="PLAY NOW" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Inline button URL<input id="tg-button-url" type="url" placeholder="https://t.me/your_bot/app" class="mt-1 w-full p-3 border rounded-xl"></label>
           </div>
-          <button onclick="adminApp.sendTelegramMessage()" class="mt-4 px-5 py-3 rounded-xl bg-indigo-600 text-white text-xs font-black">SEND TELEGRAM MESSAGE</button>
+          <div class="flex flex-wrap gap-2 mt-4"><button onclick="adminApp.saveTelegramToken()" class="px-5 py-3 rounded-xl bg-emerald-600 text-white text-xs font-black">SAVE BOT TOKEN</button><button onclick="adminApp.sendTelegramMessage()" class="px-5 py-3 rounded-xl bg-indigo-600 text-white text-xs font-black">SEND / BROADCAST MESSAGE</button></div>
           <p id="telegram-send-status" class="text-xs mt-3 text-slate-500"></p>
         </div>
       </section>
@@ -881,8 +883,11 @@
 
     levelRowsCache: [],
     levelDefaults(level) {
-      const board = level <= 4 ? 5 : level <= 12 ? 6 : level <= 24 ? 7 : level <= 38 ? 8 : 9;
-      return { level_number:level, board_size:board, arrow_count:Math.max(3,Math.min(Math.floor(board*board*.34),2+level+Math.floor(level/5))), time_limit:Math.max(25,95-Math.floor(level*.55)), room_theme:'classic', is_active:true };
+      const board = Math.min(30, 5 + Math.floor(Math.max(0, level - 1) / 12));
+      const capacity = Math.max(3, Math.floor(board * board * 0.42));
+      const difficulty = Math.min(0.42, 0.16 + Math.max(0, level - 1) * 0.0015);
+      const arrows = Math.max(3, Math.min(capacity, Math.floor(board * board * difficulty)));
+      return { level_number:level, board_size:board, arrow_count:arrows, time_limit:Math.max(20,95-Math.floor(level*.45)), room_theme:'classic', is_active:true };
     },
     async loadGameLevels() {
       const box = document.getElementById('admin-level-list');
@@ -892,6 +897,7 @@
       this.levelRowsCache = data || [];
       const map = new Map(this.levelRowsCache.map(r => [Number(r.level_number), r]));
       const maxLevel = Math.max(100, ...this.levelRowsCache.map(r => Number(r.level_number)||0));
+      const autoStart=document.getElementById('lvl-auto-start'); if(autoStart) autoStart.value=String(maxLevel+1);
       box.innerHTML = `<div class="flex items-center justify-between gap-2 mb-3"><b class="text-sm">All Levels: 1–${maxLevel}</b><span class="text-[10px] text-slate-500">${maxLevel} levels</span></div>` + Array.from({length:maxLevel},(_,i)=>{
         const n=i+1, l=map.get(n)||this.levelDefaults(n), saved=map.has(n);
         return `<div class="flex items-center justify-between gap-2 border rounded-xl p-3 text-xs bg-white"><div class="min-w-0"><b class="text-slate-900">Level ${n}</b> <span class="text-slate-500">· ${l.board_size}×${l.board_size} · ${l.arrow_count} arrows · ${l.time_limit}s</span><div class="text-[10px] ${saved?'text-emerald-600':'text-blue-500'}">${saved?'Admin customized':'Built-in default'} ${l.is_active===false?'· Hidden':''}</div></div><div class="flex gap-1 shrink-0"><button onclick="adminApp.editGameLevel(${n})" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold">Edit</button>${saved?`<button onclick="adminApp.deleteGameLevel(${n})" class="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 font-bold">Reset</button>`:''}</div></div>`;
@@ -909,8 +915,13 @@
       document.getElementById('lvl-number').scrollIntoView({behavior:'smooth',block:'center'});
     },
     previewGameLevel() {
-      const n=Math.max(5,Math.min(30,Number(document.getElementById('lvl-board')?.value)||5));
-      const count=Math.max(1,Math.min(n*n,Number(document.getElementById('lvl-arrows')?.value)||1));
+      const boardInput=document.getElementById('lvl-board');
+      const n=Math.max(5,Math.min(30,Number(boardInput?.value)||5));
+      const capacity=Math.max(3,Math.floor(n*n*.42));
+      const arrowInput=document.getElementById('lvl-arrows');
+      if(arrowInput){ arrowInput.max=String(capacity); if(!Number(arrowInput.value)||Number(arrowInput.value)>capacity) arrowInput.value=String(Math.min(capacity,Math.max(3,Math.floor(n*n*.24)))); }
+      const count=Math.max(3,Math.min(capacity,Number(arrowInput?.value)||3));
+      const capInfo=document.getElementById('lvl-capacity-info'); if(capInfo) capInfo.textContent=`এই ${n}×${n} বোর্ডে সর্বোচ্চ ${capacity} arrows · Recommended ${Math.min(capacity,Math.max(3,Math.floor(n*n*.24)))}`;
       const board=document.getElementById('lvl-preview-board'); if(!board)return;
       board.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
       const cells=Array.from({length:n*n},()=>'<span></span>');
@@ -931,28 +942,54 @@
       if (error) return showToast('Save failed: '+error.message,true);
       showToast('Level '+row.level_number+' saved'); await this.loadGameLevels();
     },
+    async generateNextLevels() {
+      const start=Math.max(1,Number(document.getElementById('lvl-auto-start').value)||1);
+      const count=Math.max(1,Math.min(5000,Number(document.getElementById('lvl-auto-count').value)||100));
+      if(!confirm(`Generate ${count} levels starting from Level ${start}? Existing levels in this range will be overwritten.`)) return;
+      const rows=[];
+      for(let n=start;n<start+count;n++) rows.push(this.levelDefaults(n));
+      for(let i=0;i<rows.length;i+=250){
+        const {error}=await sb.from('game_levels').upsert(rows.slice(i,i+250),{onConflict:'level_number'});
+        if(error) return showToast('Auto generation failed: '+error.message,true);
+      }
+      document.getElementById('lvl-auto-start').value=String(start+count);
+      showToast(`${count} levels generated successfully`);
+      await this.loadGameLevels();
+    },
     async deleteGameLevel(level) {
       const { error } = await sb.from('game_levels').delete().eq('level_number',level);
       if (error) return showToast(error.message,true);
       showToast('Level '+level+' reset to built-in default'); await this.loadGameLevels();
     },
-    async sendTelegramMessage() {
-      const status = document.getElementById('telegram-send-status');
-      const body = {
-        bot_token:document.getElementById('tg-bot-token').value.trim(),
-        chat_id:document.getElementById('tg-chat-id').value.trim(),
-        text:document.getElementById('tg-message').value.trim(),
-        photo_url:document.getElementById('tg-image-url').value.trim(),
-        button_text:document.getElementById('tg-button-text').value.trim(),
-        button_url:document.getElementById('tg-button-url').value.trim()
-      };
-      if (!body.bot_token||!body.chat_id||(!body.text&&!body.photo_url)) return showToast('Token, Chat ID and message or image required',true);
-      status.textContent='Sending…';
-      const { data, error } = await sb.functions.invoke('telegram-send',{body});
-      if (error || !data?.ok) { status.textContent='Failed: '+(data?.error||error?.message||'Unknown error'); return showToast('Telegram send failed',true); }
-      status.textContent='Message sent successfully.';
+    async saveTelegramToken() {
+      const token=document.getElementById('tg-bot-token').value.trim();
+      const status=document.getElementById('telegram-send-status');
+      if(!/^\d{5,}:[A-Za-z0-9_-]{20,}$/.test(token)) return showToast('Valid BotFather token দিন',true);
+      status.textContent='Saving bot token securely…';
+      const {data,error}=await sb.functions.invoke('telegram-send',{body:{action:'save_token',bot_token:token}});
+      if(error||!data?.ok){status.textContent='Save failed: '+(data?.error||error?.message||'Unknown error');return showToast('Bot token save failed',true);}
       document.getElementById('tg-bot-token').value='';
-      showToast('Telegram message sent');
+      status.textContent='Bot token saved. আর token দিতে হবে না।';
+      showToast('Bot token saved');
+    },
+    async sendTelegramMessage() {
+      const status=document.getElementById('telegram-send-status');
+      const chatId=document.getElementById('tg-chat-id').value.trim();
+      const body={action:'send',chat_id:chatId,text:document.getElementById('tg-message').value.trim(),photo_url:document.getElementById('tg-image-url').value.trim(),button_text:document.getElementById('tg-button-text').value.trim(),button_url:document.getElementById('tg-button-url').value.trim()};
+      if(!body.chat_id||(!body.text&&!body.photo_url)) return showToast('Chat ID (or All) and message or image required',true);
+      const all=body.chat_id.toLowerCase()==='all';
+      let cursor=null,totalSent=0,totalFailed=0,done=false;
+      status.textContent=all?'Broadcast starting…':'Sending…';
+      try{
+        while(!done){
+          const {data,error}=await sb.functions.invoke('telegram-send',{body:{...body,cursor}});
+          if(error||!data?.ok) throw new Error(data?.error||error?.message||'Unknown error');
+          totalSent+=Number(data.sent||0); totalFailed+=Number(data.failed||0); cursor=data.next_cursor||null; done=Boolean(data.done);
+          status.textContent=all?`Broadcast progress: ${totalSent} sent · ${totalFailed} failed${done?' · Completed':''}`:'Message sent successfully.';
+          if(!all) break;
+        }
+        showToast(all?`Broadcast completed: ${totalSent} sent, ${totalFailed} failed`:'Telegram message sent');
+      }catch(e){status.textContent='Failed: '+e.message;showToast('Telegram send failed: '+e.message,true);}
     },
 
     renderTasks() {
