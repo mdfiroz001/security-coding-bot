@@ -514,13 +514,23 @@
     .system-lock-screen.show { display: flex; }
   
     /* ArrowFlow polished icon system: CSS/SVG icons instead of emoji glyphs on primary navigation */
+    .task-ic{overflow:hidden;display:flex;align-items:center;justify-content:center}.task-ic img{width:100%;height:100%;object-fit:cover;border-radius:inherit}.task-card .task-meta{min-width:0}.task-card .task-meta h4{overflow-wrap:anywhere}
     .nav-ic,.feature-emoji{font-size:0!important;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center}
-    .nav-ic::before,.feature-emoji::before{content:"";width:23px;height:23px;display:block;background:currentColor;mask:var(--icon-mask) center/contain no-repeat;-webkit-mask:var(--icon-mask) center/contain no-repeat}
+    .nav-ic,.feature-emoji{font-size:0;line-height:0;color:inherit}.nav-ic::before,.feature-emoji::before{content:"";width:23px;height:23px;display:block;background:currentColor;mask:var(--icon-mask) center/contain no-repeat;-webkit-mask:var(--icon-mask) center/contain no-repeat}
     .nav-item:nth-child(1) .nav-ic{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z'/%3E%3C/svg%3E")}
     .nav-item:nth-child(2) .nav-ic{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z'/%3E%3C/svg%3E")}
     .nav-item:nth-child(3) .nav-ic{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M3 3v18h18M7 14l4-4 4 4 6-7'/%3E%3C/svg%3E")}
     .nav-item:nth-child(4) .nav-ic{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3Cpath d='M2 10h20'/%3E%3C/svg%3E")}
     .nav-item:nth-child(5) .nav-ic{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")}
+    .feature-card.blue .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M12 3v18M3 12h18'/%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3C/svg%3E")}
+    .feature-card.teal .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M4 5h16v14H4zM8 9h8M8 13h5'/%3E%3C/svg%3E")}
+    .feature-card.purple .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m12 6 2 5 4 1-4 2-2 4-2-4-4-2 4-1z'/%3E%3C/svg%3E")}
+    .feature-card.pink .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='9' r='2.5'/%3E%3Cpath d='M3 20a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 4'/%3E%3C/svg%3E")}
+    .feature-card.orange .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M12 21V9M12 13C5 13 4 8 4 5c5 0 8 2 8 8M12 16c0-6 3-9 8-9 0 5-2 9-8 9'/%3E%3C/svg%3E")}
+  
+    .task-css-icon{display:block;width:27px;height:27px;background:#2563eb;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16v16H4z'/%3E%3Cpath d='m8 12 2.5 2.5L16 9'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16v16H4z'/%3E%3Cpath d='m8 12 2.5 2.5L16 9'/%3E%3C/svg%3E") center/contain no-repeat}
+    .task-empty-state{display:flex;flex-direction:column;align-items:center;gap:7px;padding:28px 16px;background:rgba(255,255,255,.75);border:1px dashed #94a3b8;border-radius:20px;color:#334155;text-align:center}.task-empty-state small{color:#64748b}.task-fallback-icon:after{content:'✓';font-weight:900;color:#2563eb;font-size:22px}
+
   </style>
 </head>
 <body>
@@ -916,8 +926,8 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://zaynfjyaertjxopytdmm.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_arDDH3o0e9b5jrSOO5hVew_mG_C8M2w';
+  const SUPABASE_URL = 'https://tffhcvazfkltjzsssyry.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sXuv47Ahqqt5v6StFin9cg__G3PmVHS';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
   // Official Monetag Zone ID: 9745051
@@ -1013,11 +1023,13 @@
   }
 
   function generateProgressiveLevel(levelId, custom = {}) {
-    const boardSize = Math.max(5, Math.min(12, Number(custom.board_size) || (levelId <= 4 ? 5 : levelId <= 12 ? 6 : levelId <= 24 ? 7 : levelId <= 38 ? 8 : 9)));
-    const targetArrows = Math.max(3, Math.min(Math.floor(boardSize * boardSize * 0.48), Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + levelId + Math.floor(levelId / 5))));
-    const maxLen = levelId <= 6 ? 4 : levelId <= 20 ? 5 : levelId <= 40 ? 6 : 7;
+    const boardSize = Math.max(5, Math.min(30, Number(custom.board_size) || (levelId <= 4 ? 5 : levelId <= 12 ? 6 : levelId <= 24 ? 7 : levelId <= 38 ? 8 : 9)));
+    const physicalCapacity = Math.max(3, Math.floor(boardSize * boardSize * 0.42));
+    const requestedArrows = Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + levelId + Math.floor(levelId / 5));
+    const targetArrows = Math.max(3, Math.min(physicalCapacity, requestedArrows));
+    const maxLen = Math.max(4, Math.min(boardSize - 1, levelId <= 6 ? 4 : levelId <= 20 ? 5 : levelId <= 40 ? 6 : 7));
 
-    for (let attempt = 0; attempt < 25; attempt++) {
+    for (let attempt = 0; attempt < 80; attempt++) {
       const rng = mulberry32(levelId * 9973 + 1337 + attempt * 7919);
       const occupied = new Set();
       const rayCells = new Set();
@@ -1030,7 +1042,7 @@
         }
       }
 
-      for (let round = 0; round < targetArrows * 6 && arrows.length < targetArrows; round++) {
+      for (let round = 0; round < targetArrows * 16 && arrows.length < targetArrows; round++) {
         const [hx, hy, dir] = candidates[Math.floor(rng() * candidates.length)];
         const [dx, dy] = DIR_VEC[dir];
         const px = hx - dx, py = hy - dy;
@@ -1079,11 +1091,12 @@
         });
       }
 
-      if (arrows.length >= Math.min(targetArrows, 3) && ArrowEngine.isLevelSolvable(arrows, boardSize)) {
-        const timeLimit = Math.max(25, Number(custom.time_limit) || Math.max(35, 100 - Math.floor(levelId * 0.8) - Math.floor(arrows.length * 1.2)));
+      if (arrows.length >= targetArrows && ArrowEngine.isLevelSolvable(arrows, boardSize)) {
+        const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(35, 100 - Math.floor(levelId * 0.8) - Math.floor(arrows.length * 1.2)));
         return {
           id: levelId,
           boardSize,
+          roomTheme: custom.room_theme || 'classic',
           timeLimit,
           stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1],
           arrows
@@ -1094,6 +1107,7 @@
     return {
       id: levelId,
       boardSize: 5,
+      roomTheme: custom.room_theme || 'classic',
       timeLimit: 60,
       stars: [40, 22, 1],
       arrows: [
@@ -1110,7 +1124,7 @@
       const { data, error } = await sb.from('game_levels').select('*').eq('is_active', true).order('level_number');
       if (error || !data?.length) return;
       const overrides = new Map(data.map(row => [Number(row.level_number), row]));
-      const maxLevel = Math.max(100, ...data.map(x => Number(x.level_number)));
+      const maxLevel = Math.max(100, ...data.map(x => Number(x.level_number))); 
       levelsList = Array.from({ length: maxLevel }, (_, i) => {
         const id = i + 1, row = overrides.get(id);
         return generateProgressiveLevel(id, row || {});
@@ -1130,6 +1144,7 @@
     monetagCooldownSec: 5,
     monetagEnabled: true,
     monetagLogoUrl: '',
+    monetagZoneId: '9745051', adsterraId: '', adsgramId: '', gigapubId: '',
     referRewardCoins: 100,
     referBotLink: 'https://t.me/Arrowflow_bot/Arrowflowplay',
     farmRatePerHour: 24,
@@ -1342,6 +1357,10 @@
         if (cfgRow.monetag_cooldown_sec != null) appConfig.monetagCooldownSec = Number(cfgRow.monetag_cooldown_sec);
         if (typeof cfgRow.monetag_enabled === 'boolean') appConfig.monetagEnabled = cfgRow.monetag_enabled;
         if (cfgRow.monetag_logo_url != null) appConfig.monetagLogoUrl = cfgRow.monetag_logo_url;
+        if (cfgRow.monetag_zone_id) appConfig.monetagZoneId = String(cfgRow.monetag_zone_id);
+        if (cfgRow.adsterra_id != null) appConfig.adsterraId = cfgRow.adsterra_id;
+        if (cfgRow.adsgram_id != null) appConfig.adsgramId = cfgRow.adsgram_id;
+        if (cfgRow.gigapub_id != null) appConfig.gigapubId = cfgRow.gigapub_id;
         if (cfgRow.refer_reward_coins != null) appConfig.referRewardCoins = Number(cfgRow.refer_reward_coins);
         if (cfgRow.refer_bot_link && cfgRow.refer_bot_link !== 'https://t.me/ArrowFlowBot') {
           appConfig.referBotLink = cfgRow.refer_bot_link;
@@ -1573,13 +1592,15 @@
     ensureMonetagSdk() {
       return new Promise((resolve) => {
         try {
-          if (typeof window.show_9745051 === 'function') return resolve(true);
-          let existing = document.querySelector('script[data-sdk="show_9745051"]');
+          const zoneId = String(appConfig.monetagZoneId || MONETAG_ZONE_ID).replace(/[^0-9]/g,'') || MONETAG_ZONE_ID;
+          const sdkName = 'show_' + zoneId;
+          if (typeof window[sdkName] === 'function') return resolve(true);
+          let existing = document.querySelector(`script[data-sdk="${sdkName}"]`);
           if (existing) {
             let tries = 0;
             const poll = setInterval(() => {
               tries++;
-              if (typeof window.show_9745051 === 'function') {
+              if (typeof window[sdkName] === 'function') {
                 clearInterval(poll);
                 resolve(true);
               } else if (tries >= 20) {
@@ -1591,10 +1612,10 @@
           }
           const s = document.createElement('script');
           s.src = '//libtl.com/sdk.js';
-          s.setAttribute('data-zone', MONETAG_ZONE_ID);
-          s.setAttribute('data-sdk', 'show_9745051');
+          s.setAttribute('data-zone', zoneId);
+          s.setAttribute('data-sdk', sdkName);
           s.async = true;
-          s.onload = () => resolve(typeof window.show_9745051 === 'function');
+          s.onload = () => resolve(typeof window[sdkName] === 'function');
           s.onerror = () => resolve(false);
           document.head.appendChild(s);
         } catch (_) {
@@ -1607,8 +1628,9 @@
     async showMonetagOpenInterstitial() {
       try {
         const ready = await this.ensureMonetagSdk();
-        if (ready && typeof window.show_9745051 === 'function') {
-          window.show_9745051().catch(() => {});
+        const sdk = window['show_' + String(appConfig.monetagZoneId || MONETAG_ZONE_ID).replace(/[^0-9]/g,'')];
+        if (ready && typeof sdk === 'function') {
+          sdk().catch(() => {});
         }
       } catch (_) {}
     },
@@ -1619,8 +1641,9 @@
       showToast('🎬 Loading Monetag Ad...');
       try {
         const ready = await this.ensureMonetagSdk();
-        if (ready && typeof window.show_9745051 === 'function') {
-          window.show_9745051()
+        const sdk = window['show_' + String(appConfig.monetagZoneId || MONETAG_ZONE_ID).replace(/[^0-9]/g,'')];
+        if (ready && typeof sdk === 'function') {
+          sdk()
             .then(() => {
               if (typeof onSuccess === 'function') onSuccess();
             })
@@ -1855,8 +1878,8 @@
         const limitReached = doneAds >= limit;
         const mLogo = (appConfig.monetagLogoUrl || '').trim();
         const mIconHtml = /^https?:\/\//i.test(mLogo)
-          ? `<img src="${mLogo}" alt="Ads" onerror="this.onerror=null;this.parentElement.innerHTML='🎬';" />`
-          : (mLogo || '🎬');
+          ? `<img src="${mLogo.replace(/&/g,'&amp;').replace(/\"/g,'&quot;')}" alt="Ads network" loading="lazy" />`
+          : `<span class="task-css-icon ad-icon" aria-hidden="true"></span>`;
 
         const adCard = document.createElement('div');
         adCard.className = 'task-card';
@@ -1896,7 +1919,8 @@
         box.appendChild(adCard);
       }
 
-      tasksList.filter(t => t.active !== false).forEach(t => {
+      const visibleTasks = tasksList.filter(t => t.active !== false);
+      visibleTasks.forEach(t => {
         const done = state.completedTasks.includes(t.id);
         const rewType = t.reward_type || 'tickets';
         const rewAmt = Number(t.reward_amount || t.ticket_reward || 5);
@@ -1904,11 +1928,10 @@
         const waitSec = Number(t.wait_seconds || 0);
         const timerState = activeTaskTimers[t.id] || { status: 'idle', rem: waitSec };
 
-        const logoVal = (t.logo_url || t.icon || '🎟️').trim();
+        const logoVal = String(t.logo_url || t.icon || '').trim();
         const isImgUrl = /^https?:\/\//i.test(logoVal);
-        const iconHtml = isImgUrl
-          ? `<img src="${logoVal}" alt="Logo" onerror="this.onerror=null;this.parentElement.innerHTML='🎟️';" />`
-          : (logoVal || '🎟️');
+        const safeLogo = isImgUrl ? logoVal.replace(/&/g,'&amp;').replace(/\"/g,'&quot;') : '';
+        const iconHtml = isImgUrl ? `<img src="${safeLogo}" alt="${String(t.title||'Task').replace(/&/g,'&amp;').replace(/\"/g,'&quot;')}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('task-fallback-icon')" />` : `<span class="task-css-icon task-default-icon" aria-hidden="true"></span>`;
 
         const card = document.createElement('div');
         card.className = 'task-card';
@@ -1984,6 +2007,7 @@
         };
         box.appendChild(card);
       });
+      if (!visibleTasks.length && !appConfig.monetagEnabled) box.innerHTML = '<div class="task-empty-state"><span class="task-css-icon task-empty-icon"></span><b>No tasks available right now</b><small>New tasks will appear here soon.</small></div>' ;
     },
 
     // Spin Wheel Logic
@@ -2094,6 +2118,9 @@
         boosters: { hint: 1, eraser: 1, grid: 1 }, animatingIds: new Set(), pendingWin: null, finished: false
       };
       document.getElementById('game-level-title').textContent = `Level ${template.id} · ${template.boardSize}×${template.boardSize}`;
+      const roomCard = document.querySelector('.puzzle-board-card');
+      const roomThemes = { classic:'#FFFFFF', ocean:'linear-gradient(145deg,#DDF6FF,#B7E5FF)', midnight:'linear-gradient(145deg,#172554,#334155)', forest:'linear-gradient(145deg,#DCFCE7,#BBF7D0)', sunset:'linear-gradient(145deg,#FFF1E6,#FED7AA)' };
+      if (roomCard) { roomCard.style.background = roomThemes[template.roomTheme] || roomThemes.classic; roomCard.style.borderColor = template.roomTheme === 'midnight' ? '#64748B' : '#B7D8FF'; }
       document.getElementById('eraser-banner').classList.remove('show');
       document.getElementById('btn-booster-eraser').classList.remove('active-mode');
       document.getElementById('btn-booster-grid').classList.remove('active-mode');
