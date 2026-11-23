@@ -150,6 +150,13 @@
             <div>
               <label class="block text-xs font-extrabold text-slate-600 mb-1">Ad Card Icon / Logo URL</label>
               <input type="text" id="cfg-monetag-logo" placeholder="🎬 or https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <label class="block text-xs font-extrabold text-slate-600">Monetag Zone ID<input type="text" id="cfg-monetag-zone" placeholder="9745051" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" /></label>
+                <label class="block text-xs font-extrabold text-slate-600">Adsterra Publisher / Ad Unit ID<input type="text" id="cfg-adsterra-id" placeholder="Paste Adsterra ID" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" /></label>
+                <label class="block text-xs font-extrabold text-slate-600">Adsgram Block ID<input type="text" id="cfg-adsgram-id" placeholder="Paste Adsgram Block ID" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" /></label>
+                <label class="block text-xs font-extrabold text-slate-600">GigaPub App / Project ID<input type="text" id="cfg-gigapub-id" placeholder="Paste GigaPub ID" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" /></label>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-2">IDs are saved to Supabase. A network's official SDK / placement code is still required before its ads can display.</p>
             </div>
           </div>
 
@@ -286,8 +293,9 @@
                   <input type="number" id="task-wait" value="5" min="0" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
                 </div>
                 <div>
-                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Icon / Logo URL</label>
-                  <input type="text" id="task-icon" value="📢" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Task Image URL</label>
+                  <input type="url" id="task-icon" placeholder="https://example.com/task-banner.png" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                  <p class="text-[10px] text-slate-400 mt-1">Image URL দিলে ইউজার প্যানেলে ছবিসহ Task Card দেখাবে।</p>
                 </div>
               </div>
               <div>
@@ -398,10 +406,12 @@
           <p class="text-xs text-slate-500 mt-1">Create unlimited levels. Higher level numbers automatically receive denser puzzles and tighter time limits.</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
             <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="101" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Board size (5–12)<input id="lvl-board" type="number" min="5" max="12" value="8" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Arrow count<input id="lvl-arrows" type="number" min="3" max="60" value="18" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Time limit (seconds)<input id="lvl-time" type="number" min="25" max="300" value="65" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Room / Board Size (minimum 5)<input id="lvl-board" type="number" min="5" value="8" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Total Arrows (room capacity অনুযায়ী)<input id="lvl-arrows" type="number" min="3" value="18" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Time Limit (seconds)<input id="lvl-time" type="number" min="1" value="65" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Room Theme<select id="lvl-theme" class="mt-1 w-full p-3 border rounded-xl"><option value="classic">Classic White</option><option value="ocean">Ocean Blue</option><option value="midnight">Midnight Dark</option><option value="forest">Forest Green</option><option value="sunset">Sunset Warm</option></select></label>
           </div>
+          <p class="text-[11px] text-slate-500 mt-3">Room size ও Arrow Count-এর preset cap সরানো হয়েছে। বাস্তবে সর্বোচ্চ Arrow সংখ্যা নির্বাচিত Grid-এর জায়গা ও puzzle generator-এর solvability অনুযায়ী নির্ধারিত হবে।</p>
           <div class="flex flex-wrap gap-2 mt-4">
             <button onclick="adminApp.saveGameLevel()" class="px-5 py-3 rounded-xl bg-blue-600 text-white text-xs font-black">SAVE / UPDATE LEVEL</button>
             <button onclick="adminApp.loadGameLevels()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-black">REFRESH LEVELS</button>
@@ -460,8 +470,8 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://zaynfjyaertjxopytdmm.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_arDDH3o0e9b5jrSOO5hVew_mG_C8M2w';
+  const SUPABASE_URL = 'https://tffhcvazfkltjzsssyry.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sXuv47Ahqqt5v6StFin9cg__G3PmVHS';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
   const DEFAULT_PAYMENT_METHODS = [
@@ -566,7 +576,8 @@
       reward_type: document.getElementById('task-rew-type').value,
       reward_amount: Number(document.getElementById('task-rew-amt').value || 5),
       wait_seconds: Number(document.getElementById('task-wait').value || 0),
-      icon: document.getElementById('task-icon').value.trim() || '🎟️',
+      icon: '',
+      logo_url: document.getElementById('task-icon').value.trim(),
       link: document.getElementById('task-link').value.trim() || 'https://t.me/telegram',
       active: true,
       display_order: adminState.tasks.length + 1
@@ -651,6 +662,10 @@
       document.getElementById('cfg-monetag-reward').value = c.monetag_ticket_reward ?? 3;
       document.getElementById('cfg-monetag-cooldown').value = c.monetag_cooldown_sec ?? 5;
       document.getElementById('cfg-monetag-logo').value = c.monetag_logo_url ?? '';
+      document.getElementById('cfg-monetag-zone').value = c.monetag_zone_id ?? '9745051';
+      document.getElementById('cfg-adsterra-id').value = c.adsterra_id ?? '';
+      document.getElementById('cfg-adsgram-id').value = c.adsgram_id ?? '';
+      document.getElementById('cfg-gigapub-id').value = c.gigapub_id ?? '';
 
       document.getElementById('cfg-rate-usdt').value = c.coins_per_1000_usdt ?? 0.50;
       document.getElementById('cfg-min-wd').value = c.min_withdraw_usdt ?? 0.50;
@@ -671,6 +686,10 @@
         monetag_ticket_reward: Number(document.getElementById('cfg-monetag-reward').value || 3),
         monetag_cooldown_sec: Number(document.getElementById('cfg-monetag-cooldown').value || 5),
         monetag_logo_url: document.getElementById('cfg-monetag-logo').value.trim(),
+        monetag_zone_id: document.getElementById('cfg-monetag-zone').value.trim() || '9745051',
+        adsterra_id: document.getElementById('cfg-adsterra-id').value.trim(),
+        adsgram_id: document.getElementById('cfg-adsgram-id').value.trim(),
+        gigapub_id: document.getElementById('cfg-gigapub-id').value.trim(),
         coins_per_1000_usdt: Number(document.getElementById('cfg-rate-usdt').value || 0.50),
         min_withdraw_usdt: Number(document.getElementById('cfg-min-wd').value || 0.50),
         refer_reward_coins: Number(document.getElementById('cfg-ref-coins').value || 100),
@@ -837,8 +856,9 @@
       box.innerHTML = (data || []).map(l => `<div class="flex items-center justify-between gap-3 border rounded-xl p-3 text-xs"><div><b>Level ${l.level_number}</b> · ${l.board_size}×${l.board_size} · ${l.arrow_count} arrows · ${l.time_limit}s <span class="${l.is_active?'text-emerald-600':'text-rose-500'}">${l.is_active?'Active':'Hidden'}</span></div><button onclick="adminApp.deleteGameLevel(${l.level_number})" class="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 font-bold">Delete</button></div>`).join('') || '<p class="text-xs text-slate-400">No custom levels yet. Built-in levels are still available.</p>';
     },
     async saveGameLevel() {
-      const row = { level_number:Number(document.getElementById('lvl-number').value), board_size:Number(document.getElementById('lvl-board').value), arrow_count:Number(document.getElementById('lvl-arrows').value), time_limit:Number(document.getElementById('lvl-time').value), is_active:true };
-      if (!Number.isInteger(row.level_number)||row.level_number<1||row.board_size<5||row.board_size>12||row.arrow_count<3||row.time_limit<25) return showToast('Check level settings', true);
+      const row = { level_number:Number(document.getElementById('lvl-number').value), board_size:Number(document.getElementById('lvl-board').value), arrow_count:Number(document.getElementById('lvl-arrows').value), time_limit:Number(document.getElementById('lvl-time').value), room_theme:document.getElementById('lvl-theme').value, is_active:true };
+      const roomCapacity = Math.floor(row.board_size * row.board_size * 0.42);
+      if (!Number.isInteger(row.level_number)||row.level_number<1||!Number.isInteger(row.board_size)||row.board_size<5||row.board_size>30||!Number.isInteger(row.arrow_count)||row.arrow_count<3||row.arrow_count>roomCapacity||!Number.isInteger(row.time_limit)||row.time_limit<1) return showToast('Invalid room setup. Arrows must fit in the selected room (max practical capacity: '+roomCapacity+').', true);
       const { error } = await sb.from('game_levels').upsert(row,{onConflict:'level_number'});
       if (error) return showToast('Save failed: '+error.message,true);
       showToast('Level saved'); this.loadGameLevels();
@@ -877,7 +897,7 @@
       box.innerHTML = adminState.tasks.map(t => `
         <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xl">${t.icon || '🎟️'}</div>
+            <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden">${t.logo_url ? `<img src="${t.logo_url}" alt="Task image" class="w-full h-full object-cover" onerror="this.style.display='none'">` : '<span class="text-blue-600 font-black">TASK</span>'}</div>
             <div>
               <h4 class="text-sm font-black text-slate-900">${t.title}</h4>
               <p class="text-xs text-slate-500 font-semibold">+${t.reward_amount || 5} ${t.reward_type || 'tickets'} • ${t.wait_seconds || 0}s timer • <a href="${t.link}" target="_blank" class="text-blue-600 underline">Link</a></p>
