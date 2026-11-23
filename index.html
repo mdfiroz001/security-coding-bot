@@ -143,13 +143,25 @@
     .logo-title .top-word { display: block; color: #FFD83B; -webkit-text-stroke: 2.5px #1E2B7B; }
     .logo-title .bottom-word { display: block; font-size: 36px; color: #6BF263; -webkit-text-stroke: 2.5px #155E29; margin-top: 2px; }
     .loading-board-icon {
-      margin-top: 20px; width: 150px; height: 150px; background: #FFFFFF; border-radius: 28px;
+      margin-top: 20px; width: 150px; height: 150px; background: linear-gradient(145deg,#FFFFFF,#EAF4FF); border-radius: 28px;
       border: 5px solid #93B5F8; box-shadow: 0 12px 0 #6A8FE0, 0 20px 30px rgba(0,48,120,0.25); padding: 12px;
+      transform: translateZ(0); animation: loaderBoardFloat 2.2s ease-in-out infinite;
     }
+    .loading-board-icon svg { overflow: visible; }
+    .loading-board-icon .loader-track { stroke-dasharray: 260; stroke-dashoffset: 260; animation: loaderDraw 2.4s ease-in-out infinite; }
+    .loading-board-icon .loader-head { transform-box: fill-box; transform-origin: center; animation: loaderHeadPulse .8s ease-in-out infinite alternate; }
+    .loading-board-icon .loader-tile { transform-box: fill-box; transform-origin: center; animation: loaderTilePulse 1.8s ease-in-out infinite; }
+    .loading-board-icon .loader-tile:nth-of-type(2n) { animation-delay: .2s; }
+    @keyframes loaderDraw { 0% { stroke-dashoffset:260; opacity:.45; } 65%,100% { stroke-dashoffset:0; opacity:1; } }
+    @keyframes loaderHeadPulse { from { transform:scale(.88); } to { transform:scale(1.12); } }
+    @keyframes loaderTilePulse { 0%,100% { opacity:.72; } 50% { opacity:1; } }
+    @keyframes loaderBoardFloat { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-7px) rotate(1deg); } }
     .loading-progress-area { position: relative; z-index: 2; width: 100%; max-width: 310px; text-align: center; margin-bottom: 18px; }
     .loading-text { color: #FFFFFF; font-weight: 900; font-size: 16px; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,60,15,0.55); }
     .loading-track { width: 100%; height: 22px; background: #E2E8F0; border-radius: 999px; border: 3px solid #FFFFFF; overflow: hidden; }
-    .loading-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #1E7CFF 0%, #36B7FF 100%); border-radius: 999px; transition: width 0.2s ease; }
+    .loading-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #1E7CFF 0%, #36B7FF 100%); border-radius: 999px; transition: width 0.35s ease; position:relative; overflow:hidden; }
+    .loading-fill::after { content:""; position:absolute; inset:0; width:42%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent); animation:loaderShine 1.15s linear infinite; }
+    @keyframes loaderShine { from { transform:translateX(-120%); } to { transform:translateX(280%); } }
 
     /* Home Screen */
     .home-content { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 15px 14px; overflow-y: auto; gap: 10px; }
@@ -292,7 +304,7 @@
     .wallet-mini-card .lbl { font-size: 9px; font-weight: 700; opacity: 0.9; }
     .wallet-mini-card .val { display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: 900; font-size: 14px; margin-top: 3px; background: rgba(0,0,0,0.22); border-radius: 8px; padding: 2px 6px; }
 
-    .game-stage { position: relative; z-index: 2; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px 14px calc(12px + env(safe-area-inset-bottom)); gap: 6px; }
+    .game-stage { position: relative; z-index: 2; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); gap: 8px; background: radial-gradient(ellipse at 50% 38%,rgba(255,255,255,.14),transparent 66%); }
     .game-status-row { width: 100%; display: flex; align-items: center; justify-content: center; position: relative; min-height: 48px; flex-shrink: 0; }
     .restart-btn { position: absolute; left: 0; top: 2px; width: 42px; height: 42px; border-radius: 50%; font-size: 20px; }
     .level-headline { text-align: center; }
@@ -303,11 +315,15 @@
     .moves-badge { position: absolute; right: 0; top: 6px; background: rgba(255,255,255,0.94); border: 2px solid #96D7FF; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 
     .puzzle-board-card {
-      width: min(100%, 360px); aspect-ratio: 1 / 1; flex: 1; min-height: 0; max-height: 365px;
-      background: #FFFFFF; border-radius: 26px; border: 3.5px solid #B7D8FF;
-      box-shadow: 0 10px 0 rgba(16,74,168,0.2), 0 18px 30px rgba(0,45,115,0.18);
-      padding: 10px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+      width: min(100%, 410px); aspect-ratio: 1 / 1; flex: 1; min-height: 0; max-height: min(56dvh, 430px);
+      background: radial-gradient(circle at 22% 15%,#FFFFFF 0%,#F3F8FF 52%,#E4EEFF 100%);
+      border-radius: 28px; border: 3px solid rgba(255,255,255,.92);
+      box-shadow: inset 0 0 0 1px rgba(91,145,226,.28), inset 0 8px 20px rgba(68,120,210,.10), 0 10px 0 rgba(16,74,168,0.24), 0 20px 34px rgba(0,45,115,0.22);
+      padding: clamp(7px,2.3vw,13px); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
     }
+    .puzzle-board-card::before { content:""; position:absolute; inset:8px; border:1px solid rgba(100,149,237,.18); border-radius:20px; pointer-events:none; }
+    .puzzle-board-card::after { content:""; position:absolute; width:42%; height:42%; right:-18%; top:-20%; border-radius:50%; background:rgba(255,255,255,.28); filter:blur(12px); pointer-events:none; }
+    #board-svg { position:relative; z-index:1; filter: drop-shadow(0 2px 1px rgba(20,45,90,.10)); }
     .eraser-banner { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #FF5C69; color: #FFFFFF; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 999px; z-index: 5; display: none; white-space: nowrap; animation: bounceCrown 1.2s infinite; }
     .eraser-banner.show { display: block; }
 
@@ -570,13 +586,13 @@
       <div class="logo-title"><span class="top-word">ARROW</span><span class="bottom-word">FLOW</span></div>
       <div class="loading-board-icon">
         <svg viewBox="0 0 120 120" width="100%" height="100%">
-          <rect x="6" y="6" width="32" height="32" rx="7" fill="#EAF4FF"/><rect x="44" y="6" width="32" height="32" rx="7" fill="#6366F1"/><rect x="82" y="6" width="32" height="32" rx="7" fill="#38BDF8"/>
-          <rect x="6" y="44" width="32" height="32" rx="7" fill="#7C3AED"/><rect x="44" y="44" width="32" height="32" rx="7" fill="#14B8A6"/><rect x="82" y="44" width="32" height="32" rx="7" fill="#A855F7"/>
-          <rect x="6" y="82" width="32" height="32" rx="7" fill="#EC4899"/><rect x="44" y="82" width="32" height="32" rx="7" fill="#FBBF24"/><rect x="82" y="82" width="32" height="32" rx="7" fill="#3B82F6"/>
-          <path d="M 22 98 L 60 60 L 60 22 L 94 22" fill="none" stroke="#B45309" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M 22 98 L 60 60 L 60 22 L 94 22" fill="none" stroke="#FFD84D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect class="loader-tile" x="6" y="6" width="32" height="32" rx="7" fill="#EAF4FF"/><rect class="loader-tile" x="44" y="6" width="32" height="32" rx="7" fill="#6366F1"/><rect class="loader-tile" x="82" y="6" width="32" height="32" rx="7" fill="#38BDF8"/>
+          <rect class="loader-tile" x="6" y="44" width="32" height="32" rx="7" fill="#7C3AED"/><rect class="loader-tile" x="44" y="44" width="32" height="32" rx="7" fill="#14B8A6"/><rect class="loader-tile" x="82" y="44" width="32" height="32" rx="7" fill="#A855F7"/>
+          <rect class="loader-tile" x="6" y="82" width="32" height="32" rx="7" fill="#EC4899"/><rect class="loader-tile" x="44" y="82" width="32" height="32" rx="7" fill="#FBBF24"/><rect class="loader-tile" x="82" y="82" width="32" height="32" rx="7" fill="#3B82F6"/>
+          <path class="loader-track" d="M 22 98 L 60 60 L 60 22 L 94 22" fill="none" stroke="#B45309" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="loader-track" d="M 22 98 L 60 60 L 60 22 L 94 22" fill="none" stroke="#FFD84D" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
           <circle cx="22" cy="98" r="10" fill="#FFD84D" stroke="#B45309" stroke-width="3"/>
-          <polygon points="109,22 88,9 88,35" fill="#FFD84D" stroke="#B45309" stroke-width="2.5" stroke-linejoin="round"/>
+          <polygon class="loader-head" points="109,22 88,9 88,35" fill="#FFD84D" stroke="#B45309" stroke-width="2.5" stroke-linejoin="round"/>
         </svg>
       </div>
     </div>
@@ -1053,7 +1069,7 @@
     const requestedArrows = Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + levelId + Math.floor(levelId / 5));
     const targetArrows = Math.max(3, Math.min(physicalCapacity, requestedArrows));
     // Longer, more winding paths and intentional ray-crossings create real blockers.
-    const maxLen = Math.max(4, Math.min(boardSize + 2, levelId <= 3 ? 4 : levelId <= 10 ? 6 : levelId <= 25 ? 8 : levelId <= 60 ? 10 : 12));
+    const maxLen = Math.max(4, Math.min(Math.max(4, boardSize - 1), 4 + Math.floor(Math.max(0, levelId - 1) / 7)));
     let bestCandidate = null;
     let bestDifficulty = -1;
 
@@ -1178,17 +1194,25 @@
       stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1], arrows: safeArrows };
   }
 
-  let levelsList = Array.from({ length: 100 }, (_, idx) => generateProgressiveLevel(idx + 1));
+  // Generate board paths only when a player opens a level; this prevents the startup loader freezing on phones.
+  function makeLevelMeta(id, custom = {}) {
+    const boardSize = Math.max(5, Math.min(30, Number(custom.board_size) || (id <= 4 ? 5 : id <= 12 ? 6 : id <= 24 ? 7 : id <= 38 ? 8 : 9)));
+    const capacity = Math.max(3, Math.floor(boardSize * boardSize * 0.42));
+    const arrowCount = Math.max(3, Math.min(capacity, Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + id + Math.floor(id / 5))));
+    const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(25, 95 - Math.floor(id * 0.55) - Math.floor(arrowCount * 0.8)));
+    return { id, boardSize, roomTheme: custom.room_theme || 'classic', timeLimit,
+      stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1], arrows: [],
+      _custom: { board_size: boardSize, arrow_count: arrowCount, time_limit: timeLimit, room_theme: custom.room_theme || 'classic' } };
+  }
+  let levelsList = Array.from({ length: 100 }, (_, idx) => makeLevelMeta(idx + 1));
   async function loadAdminLevels() {
     try {
-      const { data, error } = await sb.from('game_levels').select('*').eq('is_active', true).order('level_number');
+      const levelFetch = sb.from('game_levels').select('*').eq('is_active', true).order('level_number');
+      const { data, error } = await Promise.race([levelFetch, new Promise(resolve => setTimeout(() => resolve({ data: null, error: new Error('Level sync timeout; using built-in levels') }), 6500))]);
       if (error || !data?.length) return;
       const overrides = new Map(data.map(row => [Number(row.level_number), row]));
-      const maxLevel = Math.max(100, ...data.map(x => Number(x.level_number))); 
-      levelsList = Array.from({ length: maxLevel }, (_, i) => {
-        const id = i + 1, row = overrides.get(id);
-        return generateProgressiveLevel(id, row || {});
-      });
+      const maxLevel = Math.max(100, ...data.map(x => Number(x.level_number)));
+      levelsList = Array.from({ length: maxLevel }, (_, i) => makeLevelMeta(i + 1, overrides.get(i + 1) || {}));
     } catch (e) { console.warn('Custom levels unavailable; using built-in levels', e); }
   }
 
@@ -1392,7 +1416,9 @@
       document.getElementById('loading-fill').style.width = `${pct}%`;
       document.getElementById('loading-label').textContent = `${msg} (${pct}%)`;
     };
-    setLoad(20, 'Loading Puzzles');
+    setLoad(12, 'Preparing Puzzle Engine');
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    setLoad(28, 'Loading Level Data');
     await loadAdminLevels();
 
     try {
@@ -1474,7 +1500,7 @@
       if (Array.isArray(taskRows) && taskRows.length > 0) tasksList = taskRows;
     } catch (_) {}
 
-    setLoad(68, 'Syncing Profile');
+    setLoad(72, 'Syncing Player Profile');
     const initData = tg?.initData || '';
     if (initData) {
       try {
@@ -1503,7 +1529,7 @@
     }
     saveLocalProgress();
 
-    setLoad(100, 'Ready!');
+    setLoad(100, 'Puzzle Ready!');
     setTimeout(() => {
       if (state.isBlocked) {
         document.getElementById('lock-icon').textContent = '🚫';
@@ -1637,7 +1663,7 @@
       document.getElementById('home-ref-sub').textContent = `Invite Friends • +${appConfig.referRewardCoins} 🪙`;
 
       const nextLvl = levelsList.find(l => l.id === state.levelUnlocked) || levelsList[0];
-      document.getElementById('home-play-sub').textContent = `Level ${state.levelUnlocked} (${nextLvl.arrows.length} Arrows) • Tap to play`;
+      document.getElementById('home-play-sub').textContent = `Level ${state.levelUnlocked} (${nextLvl.arrows?.length || nextLvl._custom?.arrow_count || 0} Arrows) • Tap to play`;
 
       const fStats = computeFarmStats();
       document.getElementById('home-farm-sub').textContent =
@@ -2168,7 +2194,12 @@
     },
 
     async startLevel(lvlId) {
-      const template = levelsList.find(l => l.id === lvlId) || levelsList[0];
+      let template = levelsList.find(l => l.id === lvlId) || levelsList[0];
+      if (!template.arrows?.length || !template.arrows[0]?.path?.length) {
+        const generated = generateProgressiveLevel(template.id, template._custom || {});
+        template = { ...generated, _custom: template._custom || {} };
+        levelsList[template.id - 1] = template;
+      }
       clearInterval(session.timerId);
       session = {
         sessionId: null, level: template,
@@ -2233,7 +2264,7 @@
     },
 
     renderBoard() {
-      const svg = document.getElementById('board-svg'), N = session.level.boardSize, viewSize = 360, pad = 24, cell = (viewSize - pad * 2) / N;
+      const svg = document.getElementById('board-svg'), N = session.level.boardSize, viewSize = 400, pad = 20, cell = (viewSize - pad * 2) / N;
       svg.setAttribute('viewBox', `0 0 ${viewSize} ${viewSize}`); svg.innerHTML = '';
 
       if (session.showGrid) {
@@ -2250,7 +2281,8 @@
         svg.appendChild(gGrid);
       }
 
-      const strokeW = Math.max(2.2, Math.min(13, cell * 0.30));
+      const density = session.arrows.length / Math.max(1, N * N);
+      const strokeW = Math.max(1.65, Math.min(10, cell * (density > 0.30 ? 0.22 : density > 0.20 ? 0.26 : 0.30)));
       session.arrows.forEach(arrow => {
         const grp = this.createArrowSVG(arrow, cell, pad, strokeW);
         if (session.hintId === arrow.id) grp.classList.add('hint-glow');
@@ -2281,6 +2313,11 @@
       hit.setAttribute('d', d); hit.setAttribute('fill', 'none'); hit.setAttribute('stroke', 'transparent');
       hit.setAttribute('stroke-width', Math.max(28, cell * 0.78)); hit.setAttribute('stroke-linecap', 'round'); hit.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(hit);
+
+      const outline = document.createElementNS(ns, 'path');
+      outline.setAttribute('d', d); outline.setAttribute('fill', 'none'); outline.setAttribute('stroke', 'rgba(15,35,75,.20)');
+      outline.setAttribute('stroke-width', strokeW * 1.55); outline.setAttribute('stroke-linecap', 'round'); outline.setAttribute('stroke-linejoin', 'round');
+      grp.appendChild(outline);
 
       const shaft = document.createElementNS(ns, 'path');
       shaft.setAttribute('d', d); shaft.setAttribute('fill', 'none'); shaft.setAttribute('stroke', arrow.color);
