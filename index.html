@@ -6,6 +6,7 @@
   <title>ArrowFlow – Telegram Puzzle Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <!-- Official Monetag SDK (Zone: 9745051) -->
   <script src='//libtl.com/sdk.js' data-zone='9745051' data-sdk='show_9745051'></script>
   <style>
@@ -928,7 +929,12 @@
 
   const SUPABASE_URL = 'https://tffhcvazfkltjzsssyry.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sXuv47Ahqqt5v6StFin9cg__G3PmVHS';
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  if (!window.supabase?.createClient) {
+    const label = document.getElementById('loading-label');
+    if (label) label.textContent = 'Connection library unavailable. Check internet and reload.';
+    throw new Error('Supabase JavaScript SDK unavailable');
+  }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
   // Official Monetag Zone ID: 9745051
   const MONETAG_ZONE_ID = '9745051';
@@ -2827,7 +2833,14 @@
     }
   }, 1000);
 
-  bootstrapBackend();
+  bootstrapBackend().catch((err) => {
+    console.error('ArrowFlow startup error:', err);
+    const loading = document.getElementById('screen-loading');
+    const home = document.getElementById('screen-home');
+    if (loading) loading.classList.remove('active');
+    if (home) home.classList.add('active');
+    try { showToast('Offline mode: ' + (err?.message || 'startup issue')); } catch (_) {}
+  });
 })();
 </script>
 </body>
