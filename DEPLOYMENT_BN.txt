@@ -1,0 +1,27 @@
+ARROWFLOW UPDATE — সেটআপ নির্দেশনা
+
+ফাইল:
+- index.html: গেম ইউজার প্যানেল
+- admin.html: অ্যাডমিন প্যানেল
+- supabase_levels_telegram.sql: নতুন ডাটাবেস টেবিল ও RLS
+- supabase/functions/telegram-send/index.ts: নিরাপদ Telegram send Edge Function
+
+১) Supabase Dashboard → SQL Editor এ supabase_levels_telegram.sql চালান।
+   SQL-এর YOUR_ADMIN_EMAIL-কে আপনার Supabase Admin login Gmail দিয়ে বদলাবেন।
+২) Edge Function deploy করুন:
+   supabase functions deploy telegram-send
+   তারপর Supabase Function secrets-এ ARROWFLOW_ADMIN_EMAIL=আপনার অ্যাডমিন Gmail সেট করুন।
+   Supabase URL এবং anon key project-এর standard function environment থেকে আসবে।
+৩) Edge Function-এ JWT verification চালু রাখুন (verify_jwt = true)।
+৪) Admin panel-এ Levels & Telegram ট্যাব খুলে Level number, board size, arrow count, time limit দিয়ে Save করুন।
+   লেভেল গেমে আসতে game_levels.is_active=true থাকতে হবে।
+৫) Telegram bot-এর BotFather token দিন, বটকে /start পাঠান অথবা গ্রুপ/চ্যানেলে বট যোগ করুন, তারপর Chat ID দিন।
+   Bot token প্রতিবার পাঠানোর পর ফিল্ড খালি হয়ে যাবে; এটি database-এ সংরক্ষণ হয় না।
+৬) User game নতুন করে খুললে active custom level তালিকা Supabase থেকে লোড করবে। নেটওয়ার্ক না থাকলে built-in 100 level fallback থাকবে।
+
+গুরুত্বপূর্ণ:
+- Admin Gmail অবশ্যই SQL policy ও ARROWFLOW_ADMIN_EMAIL secret-এ একই হতে হবে।
+- Telegram bot-কে target chat-এ message পাঠানোর অনুমতি দিতে হবে।
+- Inline button-এর URL অবশ্যই HTTPS হতে হবে।
+- Level generation procedural; admin-এর board size / arrow count / timer অনুযায়ী solvable puzzle তৈরি করার চেষ্টা করে।
+- Original schema, existing tables ও Monetag configuration অক্ষত রাখা হয়েছে।

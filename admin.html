@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArrowFlow – Admin Control Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .tab-btn.active { background: #2563EB; color: #FFFFFF; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    .card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-bold flex items-center gap-2 transition-all"></div>
+
+  <!-- LOGIN SCREEN (GMAIL + PASSWORD) -->
+  <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+    <div class="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl border border-slate-200">
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-3xl shadow-lg mb-3">🎯</div>
+        <h1 class="text-2xl font-black text-slate-900">ArrowFlow Admin</h1>
+        <p class="text-xs font-semibold text-slate-500 mt-1">Sign in with your Admin Gmail &amp; Password</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 uppercase mb-1.5">Admin Gmail Address</label>
+          <input type="email" id="admin-email" required placeholder="yourname@gmail.com"
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none text-sm font-semibold transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 uppercase mb-1.5">Password</label>
+          <input type="password" id="admin-password" required placeholder="••••••••••••"
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none text-sm font-semibold transition" />
+        </div>
+
+        <div id="auth-error" class="hidden bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold p-3 rounded-xl"></div>
+
+        <button type="submit" id="btn-login"
+          class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition cursor-pointer">
+          🔐 SIGN IN TO ADMIN PANEL
+        </button>
+      </form>
+
+      <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+        <button onclick="adminApp.toggleSetupGuide()" class="text-xs font-bold text-blue-600 hover:underline">
+          First time? View Supabase Gmail Login &amp; SQL Setup
+        </button>
+        <div id="setup-guide" class="hidden mt-3 text-left bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-[11px] text-slate-600 space-y-2">
+          <p><b>1. Create Admin Gmail Login:</b> Open Supabase Dashboard → <b>Authentication → Users → Add User</b>, enter your Gmail &amp; Password, and enable <i>Auto Confirm User</i>.</p>
+          <p><b>2. Payment Methods Column:</b> Run this SQL in Supabase SQL Editor so custom payment methods sync with your game:</p>
+          <pre class="bg-slate-900 text-emerald-400 p-2 rounded-lg overflow-x-auto text-[10px]">ALTER TABLE app_config ADD COLUMN IF NOT EXISTS payment_methods jsonb DEFAULT '[{"id":"ton","name":"TON Wallet","icon":"💎","placeholder":"Enter TON Address (UQ... / EQ...)","enabled":true},{"id":"paypal","name":"PayPal","icon":"🅿️","placeholder":"Enter PayPal Email Address","enabled":true}]'::jsonb;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN DASHBOARD -->
+  <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
+    <!-- TOP HEADER -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl font-black shadow">🎯</div>
+          <div>
+            <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight">ArrowFlow Admin</h1>
+            <p class="text-[11px] font-semibold text-slate-500" id="logged-admin-email">admin@gmail.com</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button onclick="adminApp.refreshAllData()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition cursor-pointer">
+            🔄 Refresh
+          </button>
+          <button onclick="adminApp.logout()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-extrabold transition cursor-pointer">
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- NAVIGATION TABS -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 overflow-x-auto border-t border-slate-100">
+        <button class="tab-btn active px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="overview" onclick="adminApp.switchTab('overview')">📊 Overview &amp; Ads</button>
+        <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="payments" onclick="adminApp.switchTab('payments')">💳 Payment Methods</button>
+        <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="withdrawals" onclick="adminApp.switchTab('withdrawals')">💸 Withdrawals <span id="pending-wd-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px]">0</span></button>
+        <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="tasks" onclick="adminApp.switchTab('tasks')">🎟️ Tasks &amp; Wheel</button>
+        <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="users" onclick="adminApp.switchTab('users')">👥 Players</button>
+        <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="settings" onclick="adminApp.switchTab('settings')">⚙️ Economy &amp; System</button>
+          <button class="tab-btn px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 whitespace-nowrap transition cursor-pointer" data-tab="levels" onclick="adminApp.switchTab('levels')">🧩 Levels & Telegram</button>
+      </div>
+    </header>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+
+      <!-- TAB 1: OVERVIEW & MONETAG ADS -->
+      <section id="tab-overview" class="tab-panel space-y-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100">
+            <div class="text-xs font-extrabold text-slate-400 uppercase">Total Players</div>
+            <div class="text-2xl sm:text-3xl font-black text-slate-900 mt-1" id="stat-users">0</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100">
+            <div class="text-xs font-extrabold text-slate-400 uppercase">Total Coins Held</div>
+            <div class="text-2xl sm:text-3xl font-black text-amber-500 mt-1" id="stat-coins">0</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100">
+            <div class="text-xs font-extrabold text-slate-400 uppercase">Pending Payouts</div>
+            <div class="text-2xl sm:text-3xl font-black text-rose-600 mt-1" id="stat-pending-wd">0</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100">
+            <div class="text-xs font-extrabold text-slate-400 uppercase">Total Paid USDT</div>
+            <div class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1" id="stat-paid-usdt">$0.00</div>
+          </div>
+        </div>
+
+        <!-- MONETAG AD SETTINGS -->
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">🎬 Monetag Ads Configuration (Zone 9745051)</h2>
+              <p class="text-xs font-semibold text-slate-500">Control daily rewarded ad limits, ticket rewards, and cooldown timer.</p>
+            </div>
+            <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-100 px-3.5 py-2 rounded-xl">
+              <input type="checkbox" id="cfg-monetag-enabled" class="w-4 h-4 accent-blue-600" />
+              <span class="text-xs font-extrabold text-slate-800">Enable Daily Monetag Ads</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Daily Ad Limit / User</label>
+              <input type="number" id="cfg-monetag-limit" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Ticket Reward / Ad (🎟️)</label>
+              <input type="number" id="cfg-monetag-reward" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Cooldown (Seconds)</label>
+              <input type="number" id="cfg-monetag-cooldown" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Ad Card Icon / Logo URL</label>
+              <input type="text" id="cfg-monetag-logo" placeholder="🎬 or https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+          </div>
+
+          <div class="mt-5 flex justify-end">
+            <button onclick="adminApp.saveAppConfig()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md cursor-pointer">
+              💾 SAVE MONETAG SETTINGS
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CUSTOM PAYMENT METHODS MANAGER -->
+      <section id="tab-payments" class="tab-panel hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Add New Payment Method Form -->
+          <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200 h-fit">
+            <h2 class="text-lg font-black text-slate-900 mb-1">➕ Add Payment Method</h2>
+            <p class="text-xs font-semibold text-slate-500 mb-4">Add any withdrawal method (TON, PayPal, Binance Pay, UPI, USDT TRC20, etc.)</p>
+
+            <form id="add-payment-form" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Method Name *</label>
+                <input type="text" id="pm-name" required placeholder="e.g. Binance Pay / USDT TRC20"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Icon / Emoji</label>
+                  <input type="text" id="pm-icon" value="💳" placeholder="💎 / 🅿️ / 🏦"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Min Payout ($)</label>
+                  <input type="number" step="0.01" id="pm-min" value="0.50"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Wallet Input Placeholder *</label>
+                <input type="text" id="pm-placeholder" required placeholder="e.g. Enter Binance Pay ID or Email"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Helper Note (Optional)</label>
+                <input type="text" id="pm-note" placeholder="e.g. Instant transfer, 0% fee"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md cursor-pointer">
+                ✅ ADD &amp; PUBLISH PAYMENT METHOD
+              </button>
+            </form>
+          </div>
+
+          <!-- Active Payment Methods List -->
+          <div class="lg:col-span-2 bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-lg font-black text-slate-900">💳 Configured Payment Methods</h2>
+                <p class="text-xs font-semibold text-slate-500">Toggle availability or remove methods shown in the player's Wallet.</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-black" id="pm-count-badge">2 Methods</span>
+            </div>
+
+            <div id="payment-methods-list" class="space-y-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: WITHDRAWAL REQUESTS -->
+      <section id="tab-withdrawals" class="tab-panel hidden space-y-4">
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">💸 Player Withdrawal Requests</h2>
+              <p class="text-xs font-semibold text-slate-500">Approve payouts after sending USDT or Reject to refund user balance.</p>
+            </div>
+            <select id="wd-filter" onchange="adminApp.renderWithdrawals()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-extrabold bg-slate-50">
+              <option value="all">All Requests</option>
+              <option value="Pending" selected>Pending Only</option>
+              <option value="Paid">Paid</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase">
+                  <th class="py-3 px-3">ID / Date</th>
+                  <th class="py-3 px-3">Player</th>
+                  <th class="py-3 px-3">Method &amp; Address</th>
+                  <th class="py-3 px-3">Amount</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="withdrawals-tbody" class="divide-y divide-slate-100 text-xs font-semibold"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TASKS & SPIN WHEEL -->
+      <section id="tab-tasks" class="tab-panel hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Create New Task -->
+          <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200 h-fit">
+            <h2 class="text-lg font-black text-slate-900 mb-4">➕ Create New Task</h2>
+            <form id="add-task-form" class="space-y-3">
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Task Title *</label>
+                <input type="text" id="task-title" required placeholder="Join Telegram Channel" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Description</label>
+                <input type="text" id="task-desc" placeholder="Join and stay subscribed" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Reward Type</label>
+                  <select id="task-rew-type" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">
+                    <option value="tickets">🎟️ Tickets</option>
+                    <option value="coins">🪙 Coins</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Reward Amount</label>
+                  <input type="number" id="task-rew-amt" value="5" min="1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Stay Timer (Sec)</label>
+                  <input type="number" id="task-wait" value="5" min="0" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                </div>
+                <div>
+                  <label class="block text-xs font-extrabold text-slate-600 mb-1">Icon / Logo URL</label>
+                  <input type="text" id="task-icon" value="📢" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1">Target Link (URL)</label>
+                <input type="url" id="task-link" placeholder="https://t.me/..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+              </div>
+              <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md cursor-pointer">
+                ➕ PUBLISH TASK
+              </button>
+            </form>
+          </div>
+
+          <!-- Existing Tasks List -->
+          <div class="lg:col-span-2 bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+            <h2 class="text-lg font-black text-slate-900 mb-4">📋 Active Tasks</h2>
+            <div id="admin-tasks-list" class="space-y-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: PLAYERS MANAGEMENT -->
+      <section id="tab-users" class="tab-panel hidden space-y-4">
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">👥 Registered Players</h2>
+              <p class="text-xs font-semibold text-slate-500">Edit player balances or ban/unban accounts.</p>
+            </div>
+            <input type="text" id="user-search" oninput="adminApp.renderUsers()" placeholder="Search username or Telegram ID..."
+              class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold w-64" />
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] font-black text-slate-400 uppercase">
+                  <th class="py-3 px-3">Player</th>
+                  <th class="py-3 px-3">Level / Stars</th>
+                  <th class="py-3 px-3">Coins</th>
+                  <th class="py-3 px-3">USDT</th>
+                  <th class="py-3 px-3">Tickets</th>
+                  <th class="py-3 px-3">Referrals</th>
+                  <th class="py-3 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody" class="divide-y divide-slate-100 text-xs font-semibold"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: ECONOMY & SYSTEM -->
+      <section id="tab-settings" class="tab-panel hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200 space-y-5">
+          <h2 class="text-lg font-black text-slate-900">⚙️ Economy, Referrals &amp; Maintenance Settings</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">1,000 Coins = USDT ($)</label>
+              <input type="number" step="0.01" id="cfg-rate-usdt" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Minimum Withdrawal (USDT)</label>
+              <input type="number" step="0.05" id="cfg-min-wd" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Referral Reward (Coins)</label>
+              <input type="number" id="cfg-ref-coins" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Telegram Mini App Referral URL</label>
+              <input type="text" id="cfg-ref-link" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Farming Coins / Hour</label>
+              <input type="number" id="cfg-farm-rate" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Farming Cycle (Hours)</label>
+              <input type="number" id="cfg-farm-hours" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+            <div class="sm:col-span-2 lg:col-span-3">
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Support Telegram Link</label>
+              <input type="text" id="cfg-support-link" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-amber-50/70 p-4 rounded-2xl border border-amber-200">
+            <div>
+              <label class="inline-flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="cfg-maint-mode" class="w-4 h-4 accent-rose-600" />
+                <span class="text-sm font-black text-slate-900">🛠️ Enable Maintenance Mode (Locks Game App)</span>
+              </label>
+              <input type="text" id="cfg-maint-msg" placeholder="Maintenance message shown to players..."
+                class="mt-2 w-full sm:w-96 px-3.5 py-2 rounded-xl border border-amber-300 bg-white text-xs font-bold block" />
+            </div>
+            <button onclick="adminApp.saveAppConfig()" class="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg cursor-pointer shrink-0">
+              💾 SAVE ALL SETTINGS
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CUSTOM LEVELS + TELEGRAM BOT -->
+      <section id="tab-levels" class="tab-panel hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+          <h2 class="text-lg font-black text-slate-900">🧩 Game Level Builder</h2>
+          <p class="text-xs text-slate-500 mt-1">Create unlimited levels. Higher level numbers automatically receive denser puzzles and tighter time limits.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+            <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="101" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Board size (5–12)<input id="lvl-board" type="number" min="5" max="12" value="8" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Arrow count<input id="lvl-arrows" type="number" min="3" max="60" value="18" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Time limit (seconds)<input id="lvl-time" type="number" min="25" max="300" value="65" class="mt-1 w-full p-3 border rounded-xl"></label>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button onclick="adminApp.saveGameLevel()" class="px-5 py-3 rounded-xl bg-blue-600 text-white text-xs font-black">SAVE / UPDATE LEVEL</button>
+            <button onclick="adminApp.loadGameLevels()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-black">REFRESH LEVELS</button>
+          </div>
+          <div id="admin-level-list" class="mt-5 space-y-2"><p class="text-xs text-slate-400">Loading levels…</p></div>
+        </div>
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
+          <h2 class="text-lg font-black text-slate-900">Telegram Bot Messenger</h2>
+          <p class="text-xs text-slate-500 mt-1">Send text or photo with Telegram inline URL buttons. Bot token is used only for this request and is not saved in the browser or database.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <label class="text-xs font-bold">Bot Token<input id="tg-bot-token" type="password" autocomplete="off" placeholder="123456:ABC..." class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Chat ID<input id="tg-chat-id" type="text" placeholder="@channel or numeric chat ID" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold sm:col-span-2">Message<textarea id="tg-message" rows="3" placeholder="Write your Telegram message…" class="mt-1 w-full p-3 border rounded-xl"></textarea></label>
+            <label class="text-xs font-bold sm:col-span-2">Image URL (optional)<input id="tg-image-url" type="url" placeholder="https://example.com/image.jpg" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Inline button text<input id="tg-button-text" type="text" placeholder="PLAY NOW" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Inline button URL<input id="tg-button-url" type="url" placeholder="https://t.me/your_bot/app" class="mt-1 w-full p-3 border rounded-xl"></label>
+          </div>
+          <button onclick="adminApp.sendTelegramMessage()" class="mt-4 px-5 py-3 rounded-xl bg-indigo-600 text-white text-xs font-black">SEND TELEGRAM MESSAGE</button>
+          <p id="telegram-send-status" class="text-xs mt-3 text-slate-500"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- EDIT PLAYER MODAL -->
+  <div id="edit-user-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+      <h3 class="text-lg font-black text-slate-900 mb-1">✏️ Edit Player Balance</h3>
+      <p class="text-xs font-semibold text-slate-500 mb-4" id="edit-user-sub">Player ID</p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 mb-1">Coins (🪙)</label>
+          <input type="number" id="edit-u-coins" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 mb-1">USDT Balance ($)</label>
+          <input type="number" step="0.001" id="edit-u-usdt" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 mb-1">Tickets (🎟️)</label>
+          <input type="number" id="edit-u-tickets" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold text-slate-600 mb-1">Unlocked Level</label>
+          <input type="number" id="edit-u-level" min="1" max="50" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold" />
+        </div>
+      </div>
+      <div class="flex gap-2.5 mt-5">
+        <button onclick="adminApp.closeEditUser()" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-extrabold text-xs cursor-pointer">Cancel</button>
+        <button onclick="adminApp.saveUserEdits()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-extrabold text-xs cursor-pointer">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  const SUPABASE_URL = 'https://tffhcvazfkltjzsssyry.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sXuv47Ahqqt5v6StFin9cg__G3PmVHS';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  const DEFAULT_PAYMENT_METHODS = [
+    { id: 'ton', name: 'TON Wallet', icon: '💎', placeholder: 'Enter TON Wallet Address (UQ... / EQ...)', minWithdraw: 0.50, note: 'Fast TON network payout', enabled: true },
+    { id: 'paypal', name: 'PayPal', icon: '🅿️', placeholder: 'Enter PayPal Email Address', minWithdraw: 0.50, note: 'Global PayPal transfer', enabled: true }
+  ];
+
+  let adminState = {
+    config: {},
+    paymentMethods: [...DEFAULT_PAYMENT_METHODS],
+    withdrawals: [],
+    tasks: [],
+    users: [],
+    editingUserId: null
+  };
+
+  function showToast(msg, isErr = false) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-bold flex items-center gap-2 ${isErr ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'}`;
+    el.classList.remove('hidden');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('hidden'), 3200);
+  }
+
+  // Handle Gmail + Password Login via Supabase Auth
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value.trim();
+    const password = document.getElementById('admin-password').value;
+    const errBox = document.getElementById('auth-error');
+    const btn = document.getElementById('btn-login');
+
+    errBox.classList.add('hidden');
+    btn.disabled = true;
+    btn.textContent = '⏳ Signing in...';
+
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      if (data?.user) {
+        enterDashboard(data.user);
+      }
+    } catch (err) {
+      errBox.textContent = err.message || 'Invalid Gmail or Password.';
+      errBox.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔐 SIGN IN TO ADMIN PANEL';
+    }
+  });
+
+  async function enterDashboard(user) {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('dashboard-screen').classList.remove('hidden');
+    document.getElementById('logged-admin-email').textContent = user.email || 'Admin';
+    await adminApp.refreshAllData();
+  }
+
+  // Check active session on page load
+  sb.auth.getSession().then(({ data }) => {
+    if (data?.session?.user) {
+      enterDashboard(data.session.user);
+    }
+  });
+
+  // Add Payment Method Handler
+  document.getElementById('add-payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('pm-name').value.trim();
+    const icon = document.getElementById('pm-icon').value.trim() || '💳';
+    const minWithdraw = Number(document.getElementById('pm-min').value || 0.50);
+    const placeholder = document.getElementById('pm-placeholder').value.trim();
+    const note = document.getElementById('pm-note').value.trim();
+
+    if (!name || !placeholder) return;
+
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_' + Date.now().toString().slice(-4);
+    adminState.paymentMethods.push({
+      id,
+      name,
+      icon,
+      placeholder,
+      minWithdraw,
+      note,
+      enabled: true
+    });
+
+    await persistPaymentMethods();
+    e.target.reset();
+    document.getElementById('pm-icon').value = '💳';
+    document.getElementById('pm-min').value = '0.50';
+  });
+
+  // Add Task Handler
+  document.getElementById('add-task-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newTask = {
+      id: 'task_' + Date.now(),
+      title: document.getElementById('task-title').value.trim(),
+      description: document.getElementById('task-desc').value.trim(),
+      reward_type: document.getElementById('task-rew-type').value,
+      reward_amount: Number(document.getElementById('task-rew-amt').value || 5),
+      wait_seconds: Number(document.getElementById('task-wait').value || 0),
+      icon: document.getElementById('task-icon').value.trim() || '🎟️',
+      link: document.getElementById('task-link').value.trim() || 'https://t.me/telegram',
+      active: true,
+      display_order: adminState.tasks.length + 1
+    };
+
+    const { error } = await sb.from('tasks').insert(newTask);
+    if (error) {
+      showToast('Error adding task: ' + error.message, true);
+      return;
+    }
+    showToast('✅ Task published!');
+    e.target.reset();
+    await adminApp.refreshAllData();
+  });
+
+  async function persistPaymentMethods() {
+    const { error } = await sb.from('app_config').upsert({
+      id: 1,
+      payment_methods: adminState.paymentMethods
+    }, { onConflict: 'id' });
+
+    if (error) {
+      showToast('Run the SQL snippet in Setup Guide to add payment_methods column!', true);
+      return;
+    }
+    adminApp.renderPaymentMethods();
+    showToast('✅ Payment methods updated!');
+  }
+
+  const adminApp = {
+    toggleSetupGuide() {
+      document.getElementById('setup-guide').classList.toggle('hidden');
+    },
+
+    async logout() {
+      await sb.auth.signOut();
+      document.getElementById('dashboard-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    },
+
+    switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      if (tabName === 'levels') this.loadGameLevels();
+    },
+
+    async refreshAllData() {
+      try {
+        const [cfgRes, wdRes, tasksRes, usersRes] = await Promise.all([
+          sb.from('app_config').select('*').eq('id', 1).maybeSingle(),
+          sb.from('withdrawals').select('*').order('created_at', { ascending: false }),
+          sb.from('tasks').select('*').order('display_order', { ascending: true }),
+          sb.from('app_users').select('*').order('updated_at', { ascending: false })
+        ]);
+
+        if (cfgRes.data) {
+          adminState.config = cfgRes.data;
+          if (Array.isArray(cfgRes.data.payment_methods) && cfgRes.data.payment_methods.length > 0) {
+            adminState.paymentMethods = cfgRes.data.payment_methods;
+          }
+          this.populateConfigInputs(cfgRes.data);
+        }
+        adminState.withdrawals = wdRes.data || [];
+        adminState.tasks = tasksRes.data || [];
+        adminState.users = usersRes.data || [];
+
+        this.updateStats();
+        if (!document.getElementById('tab-levels').classList.contains('hidden')) this.loadGameLevels();
+        this.renderPaymentMethods();
+        this.renderWithdrawals();
+        this.renderTasks();
+        this.renderUsers();
+      } catch (err) {
+        showToast('Failed to sync data: ' + err.message, true);
+      }
+    },
+
+    populateConfigInputs(c) {
+      document.getElementById('cfg-monetag-enabled').checked = c.monetag_enabled !== false;
+      document.getElementById('cfg-monetag-limit').value = c.monetag_daily_limit ?? 15;
+      document.getElementById('cfg-monetag-reward').value = c.monetag_ticket_reward ?? 3;
+      document.getElementById('cfg-monetag-cooldown').value = c.monetag_cooldown_sec ?? 5;
+      document.getElementById('cfg-monetag-logo').value = c.monetag_logo_url ?? '';
+
+      document.getElementById('cfg-rate-usdt').value = c.coins_per_1000_usdt ?? 0.50;
+      document.getElementById('cfg-min-wd').value = c.min_withdraw_usdt ?? 0.50;
+      document.getElementById('cfg-ref-coins').value = c.refer_reward_coins ?? 100;
+      document.getElementById('cfg-ref-link').value = c.refer_bot_link ?? 'https://t.me/Arrowflow_bot/Arrowflowplay';
+      document.getElementById('cfg-farm-rate').value = c.farm_rate_per_hour ?? 24;
+      document.getElementById('cfg-farm-hours').value = c.farm_duration_hours ?? 2;
+      document.getElementById('cfg-support-link').value = c.support_link ?? 'https://t.me/telegram';
+      document.getElementById('cfg-maint-mode').checked = Boolean(c.maintenance_mode);
+      document.getElementById('cfg-maint-msg').value = c.maintenance_msg ?? '';
+    },
+
+    async saveAppConfig() {
+      const payload = {
+        id: 1,
+        monetag_enabled: document.getElementById('cfg-monetag-enabled').checked,
+        monetag_daily_limit: Number(document.getElementById('cfg-monetag-limit').value || 15),
+        monetag_ticket_reward: Number(document.getElementById('cfg-monetag-reward').value || 3),
+        monetag_cooldown_sec: Number(document.getElementById('cfg-monetag-cooldown').value || 5),
+        monetag_logo_url: document.getElementById('cfg-monetag-logo').value.trim(),
+        coins_per_1000_usdt: Number(document.getElementById('cfg-rate-usdt').value || 0.50),
+        min_withdraw_usdt: Number(document.getElementById('cfg-min-wd').value || 0.50),
+        refer_reward_coins: Number(document.getElementById('cfg-ref-coins').value || 100),
+        refer_bot_link: document.getElementById('cfg-ref-link').value.trim(),
+        farm_rate_per_hour: Number(document.getElementById('cfg-farm-rate').value || 24),
+        farm_duration_hours: Number(document.getElementById('cfg-farm-hours').value || 2),
+        support_link: document.getElementById('cfg-support-link').value.trim(),
+        maintenance_mode: document.getElementById('cfg-maint-mode').checked,
+        maintenance_msg: document.getElementById('cfg-maint-msg').value.trim(),
+        payment_methods: adminState.paymentMethods
+      };
+
+      const { error } = await sb.from('app_config').upsert(payload, { onConflict: 'id' });
+      if (error) {
+        showToast('Save failed: ' + error.message, true);
+        return;
+      }
+      showToast('✅ Settings saved and synced live!');
+    },
+
+    updateStats() {
+      const totalUsers = adminState.users.length;
+      const totalCoins = adminState.users.reduce((sum, u) => sum + Number(u.coins || 0), 0);
+      const pendingWds = adminState.withdrawals.filter(w => (w.status || '').toLowerCase() === 'pending').length;
+      const paidUsdt = adminState.withdrawals
+        .filter(w => (w.status || '').toLowerCase() === 'paid')
+        .reduce((sum, w) => sum + Number(w.usdt || 0), 0);
+
+      document.getElementById('stat-users').textContent = totalUsers.toLocaleString();
+      document.getElementById('stat-coins').textContent = totalCoins.toLocaleString();
+      document.getElementById('stat-pending-wd').textContent = pendingWds;
+      document.getElementById('stat-paid-usdt').textContent = `$${paidUsdt.toFixed(2)}`;
+      document.getElementById('pending-wd-badge').textContent = pendingWds;
+    },
+
+    renderPaymentMethods() {
+      const box = document.getElementById('payment-methods-list');
+      document.getElementById('pm-count-badge').textContent = `${adminState.paymentMethods.length} Methods`;
+
+      if (!adminState.paymentMethods.length) {
+        box.innerHTML = `<p class="text-xs text-slate-400 font-bold">No payment methods configured yet. Add one on the left.</p>`;
+        return;
+      }
+
+      box.innerHTML = adminState.paymentMethods.map((pm, idx) => `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border ${pm.enabled ? 'border-slate-200 bg-slate-50/60' : 'border-slate-200 bg-slate-100 opacity-65'}">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-2xl shadow-2xs">${pm.icon || '💳'}</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-black text-slate-900">${pm.name}</h4>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${pm.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                  ${pm.enabled ? 'ACTIVE' : 'DISABLED'}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 font-semibold">${pm.placeholder} • Min: <b>$${Number(pm.minWithdraw || 0.5).toFixed(2)}</b></p>
+              ${pm.note ? `<p class="text-[11px] text-blue-600 font-bold mt-0.5">${pm.note}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <button onclick="adminApp.togglePaymentMethod(${idx})"
+              class="px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer ${pm.enabled ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'}">
+              ${pm.enabled ? 'Disable' : 'Enable'}
+            </button>
+            <button onclick="adminApp.deletePaymentMethod(${idx})"
+              class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-extrabold cursor-pointer">
+              Delete
+            </button>
+          </div>
+        </div>
+      `).join('');
+    },
+
+    async togglePaymentMethod(idx) {
+      adminState.paymentMethods[idx].enabled = !adminState.paymentMethods[idx].enabled;
+      await persistPaymentMethods();
+    },
+
+    async deletePaymentMethod(idx) {
+      if (adminState.paymentMethods.length <= 1) {
+        showToast('At least 1 payment method must remain!', true);
+        return;
+      }
+      adminState.paymentMethods.splice(idx, 1);
+      await persistPaymentMethods();
+    },
+
+    renderWithdrawals() {
+      const filter = document.getElementById('wd-filter').value;
+      const tbody = document.getElementById('withdrawals-tbody');
+      const rows = adminState.withdrawals.filter(w => filter === 'all' || (w.status || 'Pending') === filter);
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400 font-bold">No withdrawal requests found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(w => {
+        const st = w.status || 'Pending';
+        const badge = st === 'Paid'
+          ? 'bg-emerald-100 text-emerald-700'
+          : (st === 'Rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800');
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-3">
+              <div class="font-black text-slate-900">${w.id}</div>
+              <div class="text-[11px] text-slate-400">${w.created_at ? new Date(w.created_at).toLocaleDateString() : ''}</div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-extrabold text-slate-800">${w.username || 'Player'}</div>
+              <div class="text-[11px] text-slate-400">ID: ${w.telegram_id}</div>
+            </td>
+            <td class="py-3 px-3">
+              <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-black text-[10px]">${w.method}</span>
+              <div class="font-mono text-[11px] text-slate-700 mt-1 select-all">${w.address}</div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-black text-emerald-600 text-sm">$${Number(w.usdt || 0).toFixed(3)}</div>
+              <div class="text-[11px] text-slate-400">${w.coins || 0} Coins</div>
+            </td>
+            <td class="py-3 px-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-black ${badge}">${st}</span>
+            </td>
+            <td class="py-3 px-3 text-right space-x-1.5 whitespace-nowrap">
+              ${st === 'Pending' ? `
+                <button onclick="adminApp.updateWithdrawalStatus('${w.id}', 'Paid', '${w.telegram_id}', ${Number(w.usdt || 0)})"
+                  class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] cursor-pointer">✓ Mark Paid</button>
+                <button onclick="adminApp.updateWithdrawalStatus('${w.id}', 'Rejected', '${w.telegram_id}', ${Number(w.usdt || 0)})"
+                  class="px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold text-[11px] cursor-pointer">✕ Reject &amp; Refund</button>
+              ` : '<span class="text-slate-400 text-[11px]">Processed</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    },
+
+    async updateWithdrawalStatus(wdId, newStatus, telegramId, usdtAmt) {
+      const { error } = await sb.from('withdrawals').update({ status: newStatus }).eq('id', wdId);
+      if (error) {
+        showToast('Error updating withdrawal: ' + error.message, true);
+        return;
+      }
+
+      // Refund USDT back to user if rejected
+      if (newStatus === 'Rejected' && telegramId && usdtAmt > 0) {
+        const user = adminState.users.find(u => String(u.telegram_id) === String(telegramId));
+        if (user) {
+          const refunded = Number((Number(user.usdt_bonus || 0) + usdtAmt).toFixed(3));
+          await sb.from('app_users').update({ usdt_bonus: refunded }).eq('telegram_id', telegramId);
+        }
+      }
+
+      showToast(`✅ Withdrawal marked as ${newStatus}`);
+      await this.refreshAllData();
+    },
+
+
+    async loadGameLevels() {
+      const box = document.getElementById('admin-level-list');
+      const { data, error } = await sb.from('game_levels').select('*').order('level_number');
+      if (error) { box.textContent = 'Database error: ' + error.message; return; }
+      box.innerHTML = (data || []).map(l => `<div class="flex items-center justify-between gap-3 border rounded-xl p-3 text-xs"><div><b>Level ${l.level_number}</b> · ${l.board_size}×${l.board_size} · ${l.arrow_count} arrows · ${l.time_limit}s <span class="${l.is_active?'text-emerald-600':'text-rose-500'}">${l.is_active?'Active':'Hidden'}</span></div><button onclick="adminApp.deleteGameLevel(${l.level_number})" class="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 font-bold">Delete</button></div>`).join('') || '<p class="text-xs text-slate-400">No custom levels yet. Built-in levels are still available.</p>';
+    },
+    async saveGameLevel() {
+      const row = { level_number:Number(document.getElementById('lvl-number').value), board_size:Number(document.getElementById('lvl-board').value), arrow_count:Number(document.getElementById('lvl-arrows').value), time_limit:Number(document.getElementById('lvl-time').value), is_active:true };
+      if (!Number.isInteger(row.level_number)||row.level_number<1||row.board_size<5||row.board_size>12||row.arrow_count<3||row.time_limit<25) return showToast('Check level settings', true);
+      const { error } = await sb.from('game_levels').upsert(row,{onConflict:'level_number'});
+      if (error) return showToast('Save failed: '+error.message,true);
+      showToast('Level saved'); this.loadGameLevels();
+    },
+    async deleteGameLevel(level) {
+      const { error } = await sb.from('game_levels').delete().eq('level_number',level);
+      if (error) return showToast(error.message,true);
+      showToast('Custom level removed'); this.loadGameLevels();
+    },
+    async sendTelegramMessage() {
+      const status = document.getElementById('telegram-send-status');
+      const body = {
+        bot_token:document.getElementById('tg-bot-token').value.trim(),
+        chat_id:document.getElementById('tg-chat-id').value.trim(),
+        text:document.getElementById('tg-message').value.trim(),
+        photo_url:document.getElementById('tg-image-url').value.trim(),
+        button_text:document.getElementById('tg-button-text').value.trim(),
+        button_url:document.getElementById('tg-button-url').value.trim()
+      };
+      if (!body.bot_token||!body.chat_id||(!body.text&&!body.photo_url)) return showToast('Token, Chat ID and message or image required',true);
+      status.textContent='Sending…';
+      const { data, error } = await sb.functions.invoke('telegram-send',{body});
+      if (error || !data?.ok) { status.textContent='Failed: '+(data?.error||error?.message||'Unknown error'); return showToast('Telegram send failed',true); }
+      status.textContent='Message sent successfully.';
+      document.getElementById('tg-bot-token').value='';
+      showToast('Telegram message sent');
+    },
+
+    renderTasks() {
+      const box = document.getElementById('admin-tasks-list');
+      if (!adminState.tasks.length) {
+        box.innerHTML = `<p class="text-xs text-slate-400 font-bold">No custom tasks created yet.</p>`;
+        return;
+      }
+
+      box.innerHTML = adminState.tasks.map(t => `
+        <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xl">${t.icon || '🎟️'}</div>
+            <div>
+              <h4 class="text-sm font-black text-slate-900">${t.title}</h4>
+              <p class="text-xs text-slate-500 font-semibold">+${t.reward_amount || 5} ${t.reward_type || 'tickets'} • ${t.wait_seconds || 0}s timer • <a href="${t.link}" target="_blank" class="text-blue-600 underline">Link</a></p>
+            </div>
+          </div>
+          <button onclick="adminApp.deleteTask('${t.id}')" class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-extrabold cursor-pointer">Delete</button>
+        </div>
+      `).join('');
+    },
+
+    async deleteTask(taskId) {
+      const { error } = await sb.from('tasks').delete().eq('id', taskId);
+      if (error) {
+        showToast('Delete error: ' + error.message, true);
+        return;
+      }
+      showToast('🗑️ Task deleted');
+      await this.refreshAllData();
+    },
+
+    renderUsers() {
+      const q = (document.getElementById('user-search').value || '').toLowerCase();
+      const tbody = document.getElementById('users-tbody');
+      const filtered = adminState.users.filter(u =>
+        (u.username || '').toLowerCase().includes(q) || String(u.telegram_id || '').includes(q)
+      );
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 font-bold">No players found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => `
+        <tr class="hover:bg-slate-50 ${u.is_blocked ? 'bg-rose-50/60' : ''}">
+          <td class="py-3 px-3">
+            <div class="font-black text-slate-900">${u.username || 'Player'} ${u.is_blocked ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9px]">BANNED</span>' : ''}</div>
+            <div class="text-[11px] text-slate-400">ID: ${u.telegram_id} • Ref: ${u.referral_code || '-'}</div>
+          </td>
+          <td class="py-3 px-3">Lvl ${u.level_unlocked || 1} • ⭐ ${u.total_stars || 0}</td>
+          <td class="py-3 px-3 font-black text-amber-600">${u.coins || 0}</td>
+          <td class="py-3 px-3 font-black text-emerald-600">$${Number(u.usdt_bonus || 0).toFixed(3)}</td>
+          <td class="py-3 px-3 font-bold text-purple-600">${u.tickets || 0}</td>
+          <td class="py-3 px-3 font-bold">${u.referrals_count || 0}</td>
+          <td class="py-3 px-3 text-right space-x-1.5 whitespace-nowrap">
+            <button onclick="adminApp.openEditUser('${u.telegram_id}')" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] cursor-pointer">✏️ Edit</button>
+            <button onclick="adminApp.toggleBanUser('${u.telegram_id}', ${Boolean(u.is_blocked)})"
+              class="px-2.5 py-1.5 rounded-lg ${u.is_blocked ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} font-extrabold text-[11px] cursor-pointer">
+              ${u.is_blocked ? 'Unban' : 'Ban'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    },
+
+    openEditUser(tgId) {
+      const u = adminState.users.find(x => String(x.telegram_id) === String(tgId));
+      if (!u) return;
+      adminState.editingUserId = tgId;
+      document.getElementById('edit-user-sub').textContent = `${u.username || 'Player'} (ID: ${tgId})`;
+      document.getElementById('edit-u-coins').value = u.coins || 0;
+      document.getElementById('edit-u-usdt').value = Number(u.usdt_bonus || 0).toFixed(3);
+      document.getElementById('edit-u-tickets').value = u.tickets || 0;
+      document.getElementById('edit-u-level').value = u.level_unlocked || 1;
+      document.getElementById('edit-user-modal').classList.remove('hidden');
+    },
+
+    closeEditUser() {
+      document.getElementById('edit-user-modal').classList.add('hidden');
+      adminState.editingUserId = null;
+    },
+
+    async saveUserEdits() {
+      if (!adminState.editingUserId) return;
+      const updates = {
+        coins: Number(document.getElementById('edit-u-coins').value || 0),
+        usdt_bonus: Number(document.getElementById('edit-u-usdt').value || 0),
+        tickets: Number(document.getElementById('edit-u-tickets').value || 0),
+        level_unlocked: Number(document.getElementById('edit-u-level').value || 1)
+      };
+      const { error } = await sb.from('app_users').update(updates).eq('telegram_id', adminState.editingUserId);
+      if (error) {
+        showToast('Update failed: ' + error.message, true);
+        return;
+      }
+      this.closeEditUser();
+      showToast('✅ Player updated!');
+      await this.refreshAllData();
+    },
+
+    async toggleBanUser(tgId, currentBlocked) {
+      const { error } = await sb.from('app_users').update({ is_blocked: !currentBlocked }).eq('telegram_id', tgId);
+      if (error) {
+        showToast('Action failed: ' + error.message, true);
+        return;
+      }
+      showToast(!currentBlocked ? '🚫 Player banned' : '✅ Player unbanned');
+      await this.refreshAllData();
+    }
+  };
+
+  window.adminApp = adminApp;
+})();
+</script>
+</body>
+</html>
