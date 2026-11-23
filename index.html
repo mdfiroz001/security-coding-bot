@@ -1110,18 +1110,25 @@
         const minLen = Math.max(2, baseLen - 1);
         const maxDesired = Math.max(minLen, Math.min(maxLen, baseLen + 2));
         const desiredLen = minLen + Math.floor(rng() * (maxDesired - minLen + 1));
-        for (let step = 2; step < desiredLen; step++) {
-          const [cx, cy] = revPath[revPath.length - 1];
-          const neighbors = DIRS.map(d => [cx + DIR_VEC[d][0], cy + DIR_VEC[d][1]])
-            .filter(([nx, ny]) => nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize &&
-              !occupied.has(`${nx},${ny}`) && !myCells.has(`${nx},${ny}`) && !myRay.has(`${nx},${ny}`));
-          if (!neighbors.length) break;
-          // Prefer a new direction at each step to create clear L/U/Z shaped arrows.
-          const last = revPath.length > 1 ? [cx - revPath[revPath.length-2][0], cy - revPath[revPath.length-2][1]] : null;
-          const turned = neighbors.filter(([nx,ny]) => !last || nx-cx !== last[0] || ny-cy !== last[1]);
-          const pool = turned.length && rng() < 0.78 ? turned : neighbors;
-          const pick = pool[Math.floor(rng() * pool.length)];
-          revPath.push(pick); myCells.add(`${pick[0]},${pick[1]}`);
+        // Build deliberate straight runs with clean 90-degree bends.
+        // The path is traced backward from the arrowhead, then reversed below.
+        let backDir = [-dx, -dy];
+        let remainingSteps = desiredLen - 2;
+        while (remainingSteps > 0) {
+          const runLength = Math.min(remainingSteps, 1 + Math.floor(rng() * Math.min(3, remainingSteps)));
+          let moved = 0;
+          for (let r = 0; r < runLength; r++) {
+            const [cx, cy] = revPath[revPath.length - 1];
+            const nx = cx + backDir[0], ny = cy + backDir[1];
+            const key = `${nx},${ny}`;
+            if (nx < 0 || nx >= boardSize || ny < 0 || ny >= boardSize ||
+                occupied.has(key) || myCells.has(key) || myRay.has(key)) break;
+            revPath.push([nx, ny]); myCells.add(key); moved++;
+          }
+          remainingSteps -= moved;
+          if (moved !== runLength || remainingSteps <= 0) break;
+          const turns = DIRS.map(d => DIR_VEC[d]).filter(([tx, ty]) => tx * backDir[0] + ty * backDir[1] === 0);
+          backDir = turns[Math.floor(rng() * turns.length)];
         }
 
         const path = revPath.reverse();
@@ -2357,7 +2364,7 @@
 
       const [hx, hy] = pts[pts.length - 1];
       const head = document.createElementNS(ns, 'polygon');
-      head.setAttribute('points', this.buildArrowHeadPoints(hx, hy, arrow.direction, Math.max(strokeW * 1.85, cell * 0.34)));
+      head.setAttribute('points', this.buildArrowHeadPoints(hx, hy, arrow.direction, Math.max(strokeW * 2.05, cell * 0.40)));
       head.setAttribute('fill', arrow.color); head.setAttribute('stroke', arrow.color);
       head.setAttribute('stroke-width', String(Math.max(0.8, strokeW * 0.16))); head.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(head);
