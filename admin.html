@@ -404,7 +404,7 @@
       <section id="tab-levels" class="tab-panel hidden space-y-6">
         <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-200">
           <h2 class="text-lg font-black text-slate-900">🧩 Game Level Builder</h2>
-          <p class="text-xs text-slate-500 mt-1">Create unlimited levels. Higher level numbers automatically receive denser puzzles and tighter time limits.</p>
+          <p class="text-xs text-slate-500 mt-1">Create unlimited levels. Each level uses your exact room size, arrow count and time. New puzzles include blocking arrows and longer paths; they are no longer replaced by the easy 3-arrow fallback.</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
             <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="101" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Room / Board Size (minimum 5)<input id="lvl-board" type="number" min="5" value="8" class="mt-1 w-full p-3 border rounded-xl"></label>
@@ -412,7 +412,7 @@
             <label class="text-xs font-bold">Time Limit (seconds)<input id="lvl-time" type="number" min="1" value="65" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Room Theme<select id="lvl-theme" class="mt-1 w-full p-3 border rounded-xl"><option value="classic">Classic White</option><option value="ocean">Ocean Blue</option><option value="midnight">Midnight Dark</option><option value="forest">Forest Green</option><option value="sunset">Sunset Warm</option></select></label>
           </div>
-          <p class="text-[11px] text-slate-500 mt-3">Room size ও Arrow Count-এর preset cap সরানো হয়েছে। বাস্তবে সর্বোচ্চ Arrow সংখ্যা নির্বাচিত Grid-এর জায়গা ও puzzle generator-এর solvability অনুযায়ী নির্ধারিত হবে।</p>
+          <p class="text-[11px] text-slate-500 mt-3">Room size ও Arrow Count Grid-এর বাস্তব জায়গা অনুযায়ী যাচাই হবে। বড় Arrow Count দিলে generator ছোট arrow marker ব্যবহার করে exact count ধরে রাখবে।</p>
           <div class="flex flex-wrap gap-2 mt-4">
             <button onclick="adminApp.saveGameLevel()" class="px-5 py-3 rounded-xl bg-blue-600 text-white text-xs font-black">SAVE / UPDATE LEVEL</button>
             <button onclick="adminApp.loadGameLevels()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-black">REFRESH LEVELS</button>
