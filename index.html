@@ -529,6 +529,25 @@
     .feature-card.pink .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='9' cy='8' r='3'/%3E%3Ccircle cx='17' cy='9' r='2.5'/%3E%3Cpath d='M3 20a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 4'/%3E%3C/svg%3E")}
     .feature-card.orange .feature-emoji{--icon-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M12 21V9M12 13C5 13 4 8 4 5c5 0 8 2 8 8M12 16c0-6 3-9 8-9 0 5-2 9-8 9'/%3E%3C/svg%3E")}
   
+    /* High-contrast icon system: visible on every theme and easy to recognize. */
+    .nav-item .nav-ic{color:#1d4ed8!important;background:#dbeafe;border:1px solid #bfdbfe;border-radius:10px;padding:5px;box-sizing:content-box;}
+    .nav-item.active .nav-ic{color:#fff!important;background:#2563eb;border-color:#1d4ed8;}
+    .feature-card .feature-emoji{color:#2563eb!important;background:rgba(255,255,255,.92);border:1px solid rgba(37,99,235,.18);border-radius:14px;padding:8px;box-sizing:content-box;}
+    .icon-sq-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.35);font-weight:900;}
+    .booster-btn{min-width:58px;min-height:54px;border:2px solid rgba(255,255,255,.75);box-shadow:0 4px 0 rgba(124,74,0,.22),0 7px 16px rgba(15,23,42,.16);font-size:22px!important;}
+    .booster-label{font-weight:900;color:#334155;font-size:12px;letter-spacing:.2px;}
+    .nav-item{gap:6px;font-weight:900;}
+    /* Replace ambiguous emoji-only action buttons with clear vector symbols. */
+    .icon-sq-btn{font-size:0!important;}
+    .icon-sq-btn::before{content:"";display:block;width:23px;height:23px;background:currentColor;mask:center/contain no-repeat;-webkit-mask:center/contain no-repeat;}
+    .icon-sq-btn[onclick*="openSettings"]::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.8 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.8-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.8-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.8 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z'/%3E%3C/svg%3E");}
+    .icon-sq-btn[onclick*="navigate"],.icon-sq-btn[onclick*="exitGameplay"]{color:#fff!important;}
+    .icon-sq-btn[onclick*="navigate"]::before,.icon-sq-btn[onclick*="exitGameplay"]::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6M9 12h12'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6M9 12h12'/%3E%3C/svg%3E");}
+    .booster-btn{font-size:0!important;position:relative;}
+    .booster-btn::before{content:"";display:block;width:27px;height:27px;margin:auto;background:#fff;mask:center/contain no-repeat;-webkit-mask:center/contain no-repeat;}
+    #btn-booster-hint::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6m-5 4h4m-2-20a7 7 0 0 0-4 12.7c.7.5 1 1.1 1 1.8h6c0-.7.3-1.3 1-1.8A7 7 0 0 0 12 2Z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6m-5 4h4m-2-20a7 7 0 0 0-4 12.7c.7.5 1 1.1 1 1.8h6c0-.7.3-1.3 1-1.8A7 7 0 0 0 12 2Z'/%3E%3C/svg%3E");}
+    #btn-booster-eraser::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 21-5-5 11-11a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H7Z'/%3E%3Cpath d='m15 7 5 5M2 21h20'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 21-5-5 11-11a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-8 8H7Z'/%3E%3Cpath d='m15 7 5 5M2 21h20'/%3E%3C/svg%3E");}
+    #btn-booster-grid::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 4h16v16H4zM4 10h16M10 4v16M16 4v16M4 16h16'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 4h16v16H4zM4 10h16M10 4v16M16 4v16M4 16h16'/%3E%3C/svg%3E");}
     .task-css-icon{display:block;width:27px;height:27px;background:#2563eb;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16v16H4z'/%3E%3Cpath d='m8 12 2.5 2.5L16 9'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16v16H4z'/%3E%3Cpath d='m8 12 2.5 2.5L16 9'/%3E%3C/svg%3E") center/contain no-repeat}
     .task-empty-state{display:flex;flex-direction:column;align-items:center;gap:7px;padding:28px 16px;background:rgba(255,255,255,.75);border:1px dashed #94a3b8;border-radius:20px;color:#334155;text-align:center}.task-empty-state small{color:#64748b}.task-fallback-icon:after{content:'✓';font-weight:900;color:#2563eb;font-size:22px}
 
@@ -1033,9 +1052,12 @@
     const physicalCapacity = Math.max(3, Math.floor(boardSize * boardSize * 0.42));
     const requestedArrows = Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + levelId + Math.floor(levelId / 5));
     const targetArrows = Math.max(3, Math.min(physicalCapacity, requestedArrows));
-    const maxLen = Math.max(4, Math.min(boardSize - 1, levelId <= 6 ? 4 : levelId <= 20 ? 5 : levelId <= 40 ? 6 : 7));
+    // Longer, more winding paths and intentional ray-crossings create real blockers.
+    const maxLen = Math.max(4, Math.min(boardSize + 2, levelId <= 3 ? 4 : levelId <= 10 ? 6 : levelId <= 25 ? 8 : levelId <= 60 ? 10 : 12));
+    let bestCandidate = null;
+    let bestDifficulty = -1;
 
-    for (let attempt = 0; attempt < 80; attempt++) {
+    for (let attempt = 0; attempt < 240; attempt++) {
       const rng = mulberry32(levelId * 9973 + 1337 + attempt * 7919);
       const occupied = new Set();
       const rayCells = new Set();
@@ -1048,7 +1070,7 @@
         }
       }
 
-      for (let round = 0; round < targetArrows * 16 && arrows.length < targetArrows; round++) {
+      for (let round = 0; round < targetArrows * 48 && arrows.length < targetArrows; round++) {
         const [hx, hy, dir] = candidates[Math.floor(rng() * candidates.length)];
         const [dx, dy] = DIR_VEC[dir];
         const px = hx - dx, py = hy - dy;
@@ -1076,7 +1098,7 @@
             .filter(([nx, ny]) => {
               const key = `${nx},${ny}`;
               return nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize &&
-                     !occupied.has(key) && !myCells.has(key) && !myRay.has(key);
+                     !occupied.has(key) && !myCells.has(key);
             });
           if (neighbors.length === 0) break;
           neighbors.sort((a, b) => (rayCells.has(`${b[0]},${b[1]}`) ? 1 : 0) - (rayCells.has(`${a[0]},${a[1]}`) ? 1 : 0));
@@ -1098,30 +1120,62 @@
       }
 
       if (arrows.length >= targetArrows && ArrowEngine.isLevelSolvable(arrows, boardSize)) {
-        const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(35, 100 - Math.floor(levelId * 0.8) - Math.floor(arrows.length * 1.2)));
-        return {
-          id: levelId,
-          boardSize,
-          roomTheme: custom.room_theme || 'classic',
-          timeLimit,
-          stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1],
-          arrows
-        };
+        // Score by how many arrows are blocked at the start; prefer puzzles that
+        // require clearing several dependencies instead of instantly clearing everything.
+        const initiallyBlocked = arrows.filter(a => !ArrowEngine.checkExit(a, arrows, boardSize).clear).length;
+        const pathComplexity = arrows.reduce((n, a) => n + a.path.length, 0);
+        const difficultyScore = initiallyBlocked * 100 + pathComplexity;
+        if (difficultyScore > bestDifficulty) {
+          bestDifficulty = difficultyScore;
+          bestCandidate = arrows.map(a => ({ ...a, path: a.path.map(p => [...p]) }));
+        }
+        const requiredBlocked = Math.min(Math.max(1, Math.floor(targetArrows * 0.22)), targetArrows - 1);
+        if (initiallyBlocked >= requiredBlocked) {
+          const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(25, 95 - Math.floor(levelId * 0.55) - Math.floor(arrows.length * 0.8)));
+          return { id: levelId, boardSize, roomTheme: custom.room_theme || 'classic', timeLimit,
+            stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1], arrows };
+        }
       }
     }
 
-    return {
-      id: levelId,
-      boardSize: 5,
-      roomTheme: custom.room_theme || 'classic',
-      timeLimit: 60,
-      stars: [40, 22, 1],
-      arrows: [
-        { id: `F${levelId}_1`, path: [[4,0],[3,0],[2,0],[1,0]], direction: 'left', color: '#18C4E8' },
-        { id: `F${levelId}_2`, path: [[3,4],[2,4],[1,4],[1,3],[1,2],[1,1]], direction: 'up', color: '#12B834' },
-        { id: `F${levelId}_3`, path: [[4,4],[4,3],[4,2],[4,1],[3,1],[2,1],[2,2],[3,2],[3,3],[2,3]], direction: 'left', color: '#F59E0B' }
-      ]
-    };
+    // Never silently replace a requested large level with the old 3-arrow tutorial.
+    // Use the best complete, solvable candidate found and preserve the requested board/count.
+    if (bestCandidate && bestCandidate.length === targetArrows) {
+      const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(25, 95 - Math.floor(levelId * 0.55) - Math.floor(targetArrows * 0.8)));
+      return { id: levelId, boardSize, roomTheme: custom.room_theme || 'classic', timeLimit,
+        stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1], arrows: bestCandidate };
+    }
+
+    // Last-resort exact-count fallback. Single-cell arrows remain fully visible
+    // (the renderer adds a short shaft) and are inserted in a safe removal order.
+    const safeArrows = [], safeOccupied = new Set();
+    const edgeDistance = (x,y,d) => d==='left'?x:d==='right'?boardSize-1-x:d==='up'?y:boardSize-1-y;
+    for (let i=0; i<targetArrows; i++) {
+      let best = null, bestScore = -1;
+      for (let x=0; x<boardSize; x++) for (let y=0; y<boardSize; y++) {
+        if (safeOccupied.has(`${x},${y}`)) continue;
+        const orderedDirs = [...DIRS].sort((a,b)=>edgeDistance(x,y,a)-edgeDistance(x,y,b));
+        for (const dir of orderedDirs) {
+          const [dx,dy] = DIR_VEC[dir]; let rx=x+dx, ry=y+dy, clear=true;
+          while(rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize){if(safeOccupied.has(`${rx},${ry}`)){clear=false;break;}rx+=dx;ry+=dy;}
+          if(!clear) continue;
+          let score=0;
+          for(const old of safeArrows){
+            const [ohx,ohy]=old.path[old.path.length-1], [odx,ody]=DIR_VEC[old.direction];
+            let ox=ohx+odx, oy=ohy+ody, blocked=false;
+            while(ox>=0&&ox<boardSize&&oy>=0&&oy<boardSize){if(safeOccupied.has(`${ox},${oy}`)){blocked=true;break;}ox+=odx;oy+=ody;}
+            if(!blocked){ox=ohx+odx;oy=ohy+ody;while(ox>=0&&ox<boardSize&&oy>=0&&oy<boardSize){if(ox===x&&oy===y){score++;break;}ox+=odx;oy+=ody;}}
+          }
+          if(score>bestScore){bestScore=score;best={x,y,dir};}
+        }
+      }
+      if(!best) break;
+      safeOccupied.add(`${best.x},${best.y}`);
+      safeArrows.push({id:`F${levelId}_${i+1}`,path:[[best.x,best.y]],direction:best.dir,color:PALETTE[i%PALETTE.length]});
+    }
+    const timeLimit = Math.max(1, Number(custom.time_limit) || 45);
+    return { id: levelId, boardSize, roomTheme: custom.room_theme || 'classic', timeLimit,
+      stars: [Math.round(timeLimit * 0.62), Math.round(timeLimit * 0.34), 1], arrows: safeArrows };
   }
 
   let levelsList = Array.from({ length: 100 }, (_, idx) => generateProgressiveLevel(idx + 1));
@@ -2218,7 +2272,10 @@
       const ns = 'http://www.w3.org/2000/svg', grp = document.createElementNS(ns, 'g');
       grp.classList.add('arrow-group'); grp.dataset.id = arrow.id;
       const pts = arrow.path.map(([gx, gy]) => this.cellCenter(gx, gy, cell, pad));
-      const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+      const [headDx, headDy] = DIR_VEC[arrow.direction];
+      const d = pts.length === 1
+        ? `M ${pts[0][0] - headDx * cell * 0.34} ${pts[0][1] - headDy * cell * 0.34} L ${pts[0][0]} ${pts[0][1]}`
+        : pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
 
       const hit = document.createElementNS(ns, 'path');
       hit.setAttribute('d', d); hit.setAttribute('fill', 'none'); hit.setAttribute('stroke', 'transparent');
