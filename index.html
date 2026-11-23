@@ -1092,6 +1092,9 @@
         const px = hx - dx, py = hy - dy;
         if (px < 0 || px >= boardSize || py < 0 || py >= boardSize) continue;
         if (occupied.has(`${hx},${hy}`) || occupied.has(`${px},${py}`)) continue;
+        // Keep the arrowhead's forward tip area clear so another arrow cannot visually cover it.
+        const tipX = hx + dx, tipY = hy + dy;
+        if (tipX >= 0 && tipX < boardSize && tipY >= 0 && tipY < boardSize && occupied.has(`${tipX},${tipY}`)) continue;
 
         let rx = hx + dx, ry = hy + dy, blocked = false;
         const myRay = new Set();
@@ -1159,20 +1162,23 @@
         const [dx,dy]=DIR_VEC[dir], ray=[]; let rx=x+dx,ry=y+dy,clear=true;
         while(rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize){if(safeOccupied.has(`${rx},${ry}`)){clear=false;break;}ray.push([rx,ry]);rx+=dx;ry+=dy;}
         if(!clear) continue;
+        const tipX=x+dx, tipY=y+dy;
+        if(safeOccupied.has(`${x},${y}`)) continue;
+        if(tipX>=0&&tipX<boardSize&&tipY>=0&&tipY<boardSize&&safeOccupied.has(`${tipX},${tipY}`)) continue;
         const rev=[[x,y]], cells=new Set([`${x},${y}`]), raySet=new Set(ray.map(([rx,ry])=>`${rx},${ry}`));
         const remaining=targetArrows-i;
         // Deliberately mix short, medium and long paths like the reference artwork.
-        const desiredNow=Math.max(minLen,Math.min(maxSafeLen,i%7===0?5:(i%3===0?2:3)));
+        const desiredNow=Math.max(minLen,Math.min(maxSafeLen,(i%12===0?3:2)));
         const wanted=desiredNow;
         for(let k=1;k<wanted;k++){
           const [cx,cy]=rev[rev.length-1];
           const opts=DIRS.map(d=>[cx+DIR_VEC[d][0],cy+DIR_VEC[d][1]])
-            .filter(([nx,ny])=>nx>=0&&nx<boardSize&&ny>=0&&ny<boardSize&&!safeOccupied.has(`${nx},${ny}`)&&!cells.has(`${nx},${ny}`)&&!raySet.has(`${nx},${ny}`));
+            .filter(([nx,ny])=>nx>=0&&nx<boardSize&&ny>=0&&ny<boardSize&&!safeOccupied.has(`${nx},${ny}`)&&!(nx===tipX&&ny===tipY)&&!cells.has(`${nx},${ny}`)&&!raySet.has(`${nx},${ny}`));
           if(!opts.length) break;
           const next=opts[Math.floor(rng()*opts.length)]; rev.push(next); cells.add(`${next[0]},${next[1]}`);
         }
         if(rev.length<minLen) continue;
-        const targetNow=Math.max(minLen,Math.min(maxSafeLen,i%7===0?5:(i%3===0?2:3)));
+        const targetNow=Math.max(minLen,Math.min(maxSafeLen,(i%12===0?3:2)));
         let score=100-Math.abs(rev.length-targetNow)*30+rev.length+rng()*5;
         // Slightly favor emptier board regions for a balanced full-board layout.
         score += (boardSize - x + boardSize - y) * .001;
@@ -1191,6 +1197,29 @@
       if(!best) break;
       best.cells.forEach(k=>safeOccupied.add(k));
       safeArrows.push({id:`F${levelId}_${i+1}`,path:best.path.slice().reverse(),direction:best.dir,color:PALETTE[i%PALETTE.length]});
+    }
+    // Exact-count completion pass: fill remaining arrows with clean two-cell
+    // paths. Every new arrow has a clear exit against all earlier paths, so
+    // removing arrows in reverse insertion order always solves the puzzle.
+    while (safeArrows.length < targetArrows) {
+      const choices=[];
+      for(let y=0;y<boardSize;y++) for(let x=0;x<boardSize;x++) for(const dir of DIRS){
+        const [dx,dy]=DIR_VEC[dir], px=x-dx, py=y-dy;
+        if(px<0||px>=boardSize||py<0||py>=boardSize) continue;
+        if(safeOccupied.has(`${x},${y}`)||safeOccupied.has(`${px},${py}`)) continue;
+        let rx=x+dx,ry=y+dy,clear=true;
+        while(rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize){
+          if(safeOccupied.has(`${rx},${ry}`)){clear=false;break;}
+          rx+=dx;ry+=dy;
+        }
+        if(clear) choices.push({x,y,px,py,dir,score:rng()});
+      }
+      if(!choices.length) break;
+      // Randomize ties but spread new short arrows toward the least occupied regions.
+      choices.sort((a,b)=>a.score-b.score);
+      const q=choices[0], idx=safeArrows.length;
+      safeOccupied.add(`${q.x},${q.y}`); safeOccupied.add(`${q.px},${q.py}`);
+      safeArrows.push({id:`F${levelId}_${idx+1}`,path:[[q.px,q.py],[q.x,q.y]],direction:q.dir,color:PALETTE[(idx+levelId)%PALETTE.length]});
     }
     const timeLimit=Math.max(1,Number(custom.time_limit)||45);
     return {id:levelId,boardSize,roomTheme:custom.room_theme||'classic',timeLimit,stars:[Math.round(timeLimit*.62),Math.round(timeLimit*.34),1],arrows:safeArrows};
@@ -2284,7 +2313,7 @@
       }
 
       const density = session.arrows.length / Math.max(1, N * N);
-      const strokeW = Math.max(2.8, Math.min(12, cell * (density > 0.34 ? 0.27 : density > 0.22 ? 0.30 : 0.34)));
+      const strokeW = Math.max(2.4, Math.min(10, cell * (density > 0.30 ? 0.22 : density > 0.18 ? 0.25 : 0.29)));
       session.arrows.forEach(arrow => {
         const grp = this.createArrowSVG(arrow, cell, pad, strokeW);
         if (session.hintId === arrow.id) grp.classList.add('hint-glow');
@@ -2318,7 +2347,7 @@
 
       const outline = document.createElementNS(ns, 'path');
       outline.setAttribute('d', d); outline.setAttribute('fill', 'none'); outline.setAttribute('stroke', 'rgba(15,35,75,.20)');
-      outline.setAttribute('stroke-width', strokeW * 1.55); outline.setAttribute('stroke-linecap', 'round'); outline.setAttribute('stroke-linejoin', 'round');
+      outline.setAttribute('stroke-width', strokeW * 1.38); outline.setAttribute('stroke-linecap', 'round'); outline.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(outline);
 
       const shaft = document.createElementNS(ns, 'path');
@@ -2328,7 +2357,7 @@
 
       const [hx, hy] = pts[pts.length - 1];
       const head = document.createElementNS(ns, 'polygon');
-      head.setAttribute('points', this.buildArrowHeadPoints(hx, hy, arrow.direction, Math.max(strokeW * 1.9, cell * 0.38)));
+      head.setAttribute('points', this.buildArrowHeadPoints(hx, hy, arrow.direction, Math.max(strokeW * 1.85, cell * 0.34)));
       head.setAttribute('fill', arrow.color); head.setAttribute('stroke', arrow.color);
       head.setAttribute('stroke-width', String(Math.max(0.8, strokeW * 0.16))); head.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(head);
