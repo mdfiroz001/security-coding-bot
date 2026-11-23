@@ -406,13 +406,14 @@
           <h2 class="text-lg font-black text-slate-900">🧩 Game Level Builder</h2>
           <p class="text-xs text-slate-500 mt-1">Create unlimited levels. Each level uses your exact room size, arrow count and time. New puzzles include blocking arrows and longer paths; they are no longer replaced by the easy 3-arrow fallback.</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
-            <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="101" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Room / Board Size (minimum 5)<input id="lvl-board" type="number" min="5" value="8" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Total Arrows (room capacity অনুযায়ী)<input id="lvl-arrows" type="number" min="3" value="18" class="mt-1 w-full p-3 border rounded-xl"></label>
-            <label class="text-xs font-bold">Time Limit (seconds)<input id="lvl-time" type="number" min="1" value="65" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Level number<input id="lvl-number" type="number" min="1" value="1" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Room / Board Size<input id="lvl-board" type="number" min="5" max="30" value="5" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Total Arrows<input id="lvl-arrows" type="number" min="3" value="8" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
+            <label class="text-xs font-bold">Time Limit (seconds)<input id="lvl-time" type="number" min="1" value="90" oninput="adminApp.previewGameLevel()" class="mt-1 w-full p-3 border rounded-xl"></label>
             <label class="text-xs font-bold">Room Theme<select id="lvl-theme" class="mt-1 w-full p-3 border rounded-xl"><option value="classic">Classic White</option><option value="ocean">Ocean Blue</option><option value="midnight">Midnight Dark</option><option value="forest">Forest Green</option><option value="sunset">Sunset Warm</option></select></label>
           </div>
-          <p class="text-[11px] text-slate-500 mt-3">Room size ও Arrow Count Grid-এর বাস্তব জায়গা অনুযায়ী যাচাই হবে। বড় Arrow Count দিলে generator ছোট arrow marker ব্যবহার করে exact count ধরে রাখবে।</p>
+          <div class="mt-4 rounded-2xl border border-blue-100 bg-slate-950 p-4 text-white"><div class="flex items-center justify-between gap-2 mb-3"><b class="text-sm">LIVE LEVEL PREVIEW</b><span id="lvl-preview-meta" class="text-[11px] text-blue-200">5×5 · 8 arrows</span></div><div id="lvl-preview-board" class="mx-auto grid gap-[2px] max-w-[420px] aspect-square rounded-xl bg-slate-700 p-2"></div><p class="text-[10px] text-slate-300 mt-2">Board size ও arrow count বদলালে Preview সঙ্গে সঙ্গে আপডেট হবে।</p></div>
+          <p class="text-[11px] text-slate-500 mt-3">Level 1 থেকে সর্বোচ্চ Level পর্যন্ত তালিকায় দেখা ও Edit করা যাবে। বড় বোর্ডে গেমের Arrow চিকন হবে এবং বেশি Arrow বসবে।</p>
           <div class="flex flex-wrap gap-2 mt-4">
             <button onclick="adminApp.saveGameLevel()" class="px-5 py-3 rounded-xl bg-blue-600 text-white text-xs font-black">SAVE / UPDATE LEVEL</button>
             <button onclick="adminApp.loadGameLevels()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-800 text-xs font-black">REFRESH LEVELS</button>
@@ -651,7 +652,7 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-      if (tabName === 'levels') this.loadGameLevels();
+      if (tabName === 'levels') { this.loadGameLevels(); this.previewGameLevel(); }
     },
 
     async refreshAllData() {
@@ -878,24 +879,62 @@
     },
 
 
+    levelRowsCache: [],
+    levelDefaults(level) {
+      const board = level <= 4 ? 5 : level <= 12 ? 6 : level <= 24 ? 7 : level <= 38 ? 8 : 9;
+      return { level_number:level, board_size:board, arrow_count:Math.max(3,Math.min(Math.floor(board*board*.34),2+level+Math.floor(level/5))), time_limit:Math.max(25,95-Math.floor(level*.55)), room_theme:'classic', is_active:true };
+    },
     async loadGameLevels() {
       const box = document.getElementById('admin-level-list');
+      box.innerHTML = '<p class="text-xs text-slate-400">Loading all levels…</p>';
       const { data, error } = await sb.from('game_levels').select('*').order('level_number');
       if (error) { box.textContent = 'Database error: ' + error.message; return; }
-      box.innerHTML = (data || []).map(l => `<div class="flex items-center justify-between gap-3 border rounded-xl p-3 text-xs"><div><b>Level ${l.level_number}</b> · ${l.board_size}×${l.board_size} · ${l.arrow_count} arrows · ${l.time_limit}s <span class="${l.is_active?'text-emerald-600':'text-rose-500'}">${l.is_active?'Active':'Hidden'}</span></div><button onclick="adminApp.deleteGameLevel(${l.level_number})" class="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 font-bold">Delete</button></div>`).join('') || '<p class="text-xs text-slate-400">No custom levels yet. Built-in levels are still available.</p>';
+      this.levelRowsCache = data || [];
+      const map = new Map(this.levelRowsCache.map(r => [Number(r.level_number), r]));
+      const maxLevel = Math.max(100, ...this.levelRowsCache.map(r => Number(r.level_number)||0));
+      box.innerHTML = `<div class="flex items-center justify-between gap-2 mb-3"><b class="text-sm">All Levels: 1–${maxLevel}</b><span class="text-[10px] text-slate-500">${maxLevel} levels</span></div>` + Array.from({length:maxLevel},(_,i)=>{
+        const n=i+1, l=map.get(n)||this.levelDefaults(n), saved=map.has(n);
+        return `<div class="flex items-center justify-between gap-2 border rounded-xl p-3 text-xs bg-white"><div class="min-w-0"><b class="text-slate-900">Level ${n}</b> <span class="text-slate-500">· ${l.board_size}×${l.board_size} · ${l.arrow_count} arrows · ${l.time_limit}s</span><div class="text-[10px] ${saved?'text-emerald-600':'text-blue-500'}">${saved?'Admin customized':'Built-in default'} ${l.is_active===false?'· Hidden':''}</div></div><div class="flex gap-1 shrink-0"><button onclick="adminApp.editGameLevel(${n})" class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-bold">Edit</button>${saved?`<button onclick="adminApp.deleteGameLevel(${n})" class="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 font-bold">Reset</button>`:''}</div></div>`;
+      }).join('');
+      this.previewGameLevel();
+    },
+    editGameLevel(level) {
+      const row = this.levelRowsCache.find(r=>Number(r.level_number)===Number(level)) || this.levelDefaults(Number(level));
+      document.getElementById('lvl-number').value = row.level_number;
+      document.getElementById('lvl-board').value = row.board_size;
+      document.getElementById('lvl-arrows').value = row.arrow_count;
+      document.getElementById('lvl-time').value = row.time_limit;
+      document.getElementById('lvl-theme').value = row.room_theme || 'classic';
+      this.previewGameLevel();
+      document.getElementById('lvl-number').scrollIntoView({behavior:'smooth',block:'center'});
+    },
+    previewGameLevel() {
+      const n=Math.max(5,Math.min(30,Number(document.getElementById('lvl-board')?.value)||5));
+      const count=Math.max(1,Math.min(n*n,Number(document.getElementById('lvl-arrows')?.value)||1));
+      const board=document.getElementById('lvl-preview-board'); if(!board)return;
+      board.style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
+      const cells=Array.from({length:n*n},()=>'<span></span>');
+      // Deterministic visual placement, one arrow per occupied cell; actual playable paths are generated by game engine.
+      let seed=(Number(document.getElementById('lvl-number')?.value)||1)*7919+n*97+count;
+      const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+      const chosen=new Set(); while(chosen.size<count) chosen.add(Math.floor(rand()*n*n));
+      const dirs=['↑','→','↓','←'], colors=['#38bdf8','#a78bfa','#34d399','#fbbf24','#fb7185','#e879f9'];
+      chosen.forEach(idx=>{const d=dirs[Math.floor(rand()*4)],c=colors[Math.floor(rand()*colors.length)];cells[idx]=`<span class="flex items-center justify-center rounded-[3px]" style="background:#1e293b;color:${c};font-size:clamp(7px,${Math.max(7,Math.min(22,240/n))}px,22px);font-weight:900;line-height:1">${d}</span>`;});
+      board.innerHTML=cells.join('');
+      const meta=document.getElementById('lvl-preview-meta'); if(meta)meta.textContent=`${n}×${n} · ${count} arrows · Level ${document.getElementById('lvl-number').value||1}`;
     },
     async saveGameLevel() {
       const row = { level_number:Number(document.getElementById('lvl-number').value), board_size:Number(document.getElementById('lvl-board').value), arrow_count:Number(document.getElementById('lvl-arrows').value), time_limit:Number(document.getElementById('lvl-time').value), room_theme:document.getElementById('lvl-theme').value, is_active:true };
       const roomCapacity = Math.floor(row.board_size * row.board_size * 0.42);
-      if (!Number.isInteger(row.level_number)||row.level_number<1||!Number.isInteger(row.board_size)||row.board_size<5||row.board_size>30||!Number.isInteger(row.arrow_count)||row.arrow_count<3||row.arrow_count>roomCapacity||!Number.isInteger(row.time_limit)||row.time_limit<1) return showToast('Invalid room setup. Arrows must fit in the selected room (max practical capacity: '+roomCapacity+').', true);
+      if (!Number.isInteger(row.level_number)||row.level_number<1||!Number.isInteger(row.board_size)||row.board_size<5||row.board_size>30||!Number.isInteger(row.arrow_count)||row.arrow_count<3||row.arrow_count>roomCapacity||!Number.isInteger(row.time_limit)||row.time_limit<1) return showToast('Invalid setup. Board 5–30; arrows 3–'+roomCapacity+'.', true);
       const { error } = await sb.from('game_levels').upsert(row,{onConflict:'level_number'});
       if (error) return showToast('Save failed: '+error.message,true);
-      showToast('Level saved'); this.loadGameLevels();
+      showToast('Level '+row.level_number+' saved'); await this.loadGameLevels();
     },
     async deleteGameLevel(level) {
       const { error } = await sb.from('game_levels').delete().eq('level_number',level);
       if (error) return showToast(error.message,true);
-      showToast('Custom level removed'); this.loadGameLevels();
+      showToast('Level '+level+' reset to built-in default'); await this.loadGameLevels();
     },
     async sendTelegramMessage() {
       const status = document.getElementById('telegram-send-status');
