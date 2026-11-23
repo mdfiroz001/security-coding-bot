@@ -1066,119 +1066,116 @@
   function seedBaseForCompact(levelId, boardSize, target){ return (levelId*7919+boardSize*104729+target*65537+0x5A17)>>>0; }
 
   function generateProgressiveLevel(levelId, custom = {}) {
-    const boardSize=Math.max(5,Math.min(30,Number(custom.board_size)||(levelId<=4?5:levelId<=12?6:levelId<=24?7:levelId<=38?8:9)));
-    const capacity=Math.max(3,Math.floor(boardSize*boardSize*.42));
-    const requested=Number(custom.arrow_count)||Math.min(Math.floor(boardSize*boardSize*.34),2+levelId+Math.floor(levelId/5));
-    const target=Math.max(3,Math.min(capacity,requested));
-    const timeLimit=Math.max(1,Number(custom.time_limit)||Math.max(25,95-Math.floor(levelId*.55)-Math.floor(target*.8)));
-    const density=target/(boardSize*boardSize), maxLen=Math.max(3,Math.min(boardSize-1,5+Math.floor(levelId/8)));
-    const rng=mulberry32((levelId*104729+boardSize*7919+target*1543)>>>0);
-    const occupied=new Set(), arrows=[];
-
-    function makePath(hx,hy,dir,wanted){
-      if(occupied.has(`${hx},${hy}`)) return null;
-      const [dx,dy]=DIR_VEC[dir], ray=new Set();
-      for(let x=hx+dx,y=hy+dy;x>=0&&x<boardSize&&y>=0&&y<boardSize;x+=dx,y+=dy){
-        const k=`${x},${y}`; if(occupied.has(k)) return null; ray.add(k);
+    const boardSize = Math.max(5, Math.min(30, Number(custom.board_size) || (levelId <= 4 ? 5 : levelId <= 12 ? 6 : levelId <= 24 ? 7 : levelId <= 38 ? 8 : 9)));
+    // Conservative board capacity keeps long, bent arrows readable with safe spacing.
+    const capacity = Math.max(3, Math.floor(boardSize * boardSize * 0.07));
+    const requested = Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * .24), 2 + levelId + Math.floor(levelId / 5));
+    const target = Math.max(1, Math.min(capacity, requested));
+    const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(25, 95 - Math.floor(levelId * .55) - Math.floor(target * .8)));
+    const density = target / (boardSize * boardSize);
+    const maxLen = Math.max(3, Math.min(boardSize - 1, 5 + Math.floor(levelId / 7)));
+    const rng = mulberry32((levelId * 104729 + boardSize * 7919 + target * 1543) >>> 0);
+    const occupied = new Set(), arrows = [];
+    // New paths may be blocked by older arrows, but must never block an older
+    // arrow's exit ray. This creates a one-way dependency graph (DAG), so every
+    // generated puzzle can be solved by removing arrows in placement order.
+    function preservesRemovalOrder(cells){
+      const keys=cells instanceof Set?cells:new Set(cells.map(([x,y])=>`${x},${y}`));
+      for(const a of arrows){
+        const [hx,hy]=a.path[a.path.length-1], [dx,dy]=DIR_VEC[a.direction];
+        for(let x=hx+dx,y=hy+dy;x>=0&&x<boardSize&&y>=0&&y<boardSize;x+=dx,y+=dy){
+          if(keys.has(`${x},${y}`)) return false;
+        }
       }
-      const rev=[[hx,hy]], own=new Set([`${hx},${hy}`]);
+      return true;
+    }
+
+    function makePath(hx, hy, dir, wanted) {
+      if (occupied.has(`${hx},${hy}`)) return null;
+      const [dx,dy] = DIR_VEC[dir];
       let x=hx-dx,y=hy-dy;
-      if(x<0||x>=boardSize||y<0||y>=boardSize||occupied.has(`${x},${y}`)||ray.has(`${x},${y}`))return null;
-      rev.push([x,y]);own.add(`${x},${y}`);
-      let heading=[-dx,-dy], turns=0, runLeft=1+Math.floor(rng()*3);
-      while(rev.length<wanted){
+      if(x<0||x>=boardSize||y<0||y>=boardSize||occupied.has(`${x},${y}`)) return null;
+      const rev=[[hx,hy],[x,y]], own=new Set([`${hx},${hy}`,`${x},${y}`]);
+      let heading=[-dx,-dy], runLeft=(wanted<=3?0:(wanted===4?1:1+Math.floor(rng()*2))), turns=0, guard=0;
+      while(rev.length<wanted && guard++<wanted*5){
         if(runLeft<=0){
-          const turnsToTry=[[-heading[1],heading[0]],[heading[1],-heading[0]]];
-          if(rng()<.5)turnsToTry.reverse();
+          const opts=[[-heading[1],heading[0]],[heading[1],-heading[0]]];
+          if(rng()<.5) opts.reverse();
           let next=null;
-          for(const t of turnsToTry){const nx=x+t[0],ny=y+t[1],k=`${nx},${ny}`;if(nx>=0&&nx<boardSize&&ny>=0&&ny<boardSize&&!occupied.has(k)&&!own.has(k)&&!ray.has(k)){next=t;break;}}
-          if(!next)break; heading=next;turns++;runLeft=1+Math.floor(rng()*3);
+          for(const t of opts){const nx=x+t[0],ny=y+t[1],k=`${nx},${ny}`;if(nx>=0&&nx<boardSize&&ny>=0&&ny<boardSize&&!occupied.has(k)&&!own.has(k)){next=t;break;}}
+          if(!next) break;
+          heading=next; turns++; runLeft=1+Math.floor(rng()*3);
         }
         const nx=x+heading[0],ny=y+heading[1],key=`${nx},${ny}`;
-        if(nx<0||nx>=boardSize||ny<0||ny>=boardSize||occupied.has(key)||own.has(key)||ray.has(key)){
-          // Try one clean perpendicular turn rather than producing a jagged random walk.
-          runLeft=0;continue;
-        }
+        if(nx<0||nx>=boardSize||ny<0||ny>=boardSize||occupied.has(key)||own.has(key)){runLeft=0;continue;}
         x=nx;y=ny;rev.push([x,y]);own.add(key);runLeft--;
       }
-      return rev.length>=2?{path:rev.reverse(),cells:own,turns}:null;
+      if(rev.length<wanted || !preservesRemovalOrder(own)) return null;
+      return {path:rev.reverse(),cells:own,turns};
     }
 
-    function wantedLength(i){
+    function desiredLength(){
       const r=rng();
-      if(density>.30)return r<.76?2:r<.96?3:4;
-      if(density>.20)return r<.52?2:r<.83?3:r<.96?4:5;
-      if(density>.12)return r<.24?3:r<.55?4:r<.82?5:r<.95?6:Math.min(maxLen,8);
-      return r<.15?3:r<.35?4:r<.58?6:r<.82?8:Math.min(maxLen,10);
+      if(density>.27) return r<.88?3:4;
+      if(density>.19) return r<.52?3:r<.88?4:5;
+      if(density>.12) return r<.20?3:r<.48?4:r<.78?5:r<.94?6:Math.min(maxLen,8);
+      return r<.12?3:r<.30?4:r<.54?6:r<.78?8:Math.min(maxLen,11);
     }
 
-    // Place arrows over the whole board with seeded randomness. Each arrow is
-    // built tip-first; its exit ray is clear when placed. Later arrows can block it,
-    // so removing arrows in reverse order always yields a solvable puzzle.
+    function placeCandidate(built, dir, headX, headY, len){
+      const cx=built.path.reduce((v,q)=>v+q[0],0)/len, cy=built.path.reduce((v,q)=>v+q[1],0)/len;
+      let nearest=boardSize;
+      for(const a of arrows){const ax=a.path.reduce((v,q)=>v+q[0],0)/a.path.length, ay=a.path.reduce((v,q)=>v+q[1],0)/a.path.length;nearest=Math.min(nearest,Math.hypot(cx-ax,cy-ay));}
+      const edge=Math.min(headX,headY,boardSize-1-headX,boardSize-1-headY);
+      return nearest*1.3 + built.turns*2.8 + len*.9 + edge*.06 + rng()*1.2;
+    }
+
+    // Place long, continuous orthogonal paths. Every new arrow has a clear exit;
+    // arrows placed later may block earlier ones, so reverse removal is solvable.
     for(let i=0;i<target;i++){
       let chosen=null;
-      const desired=Math.min(maxLen,wantedLength(i));
-      for(let len=desired;len>=2&&!chosen;len--){
+      const desired=Math.min(maxLen,desiredLength());
+      for(let len=desired;len>=3&&!chosen;len--){
         let best=null,bestScore=-Infinity;
-        for(let trial=0;trial<Math.min(180,boardSize*boardSize*2);trial++){
-          const hx=Math.floor(rng()*boardSize),hy=Math.floor(rng()*boardSize),dir=DIRS[Math.floor(rng()*4)];
-          const built=makePath(hx,hy,dir,len);if(!built||built.path.length!==len)continue;
-          const cx=built.path.reduce((v,q)=>v+q[0],0)/len,cy=built.path.reduce((v,q)=>v+q[1],0)/len;
-          let spread=boardSize;
-          for(const ar of arrows){const ax=ar.path.reduce((v,q)=>v+q[0],0)/ar.path.length,ay=ar.path.reduce((v,q)=>v+q[1],0)/ar.path.length;spread=Math.min(spread,Math.hypot(cx-ax,cy-ay));}
-          const edgeBalance=Math.min(hx,hy,boardSize-1-hx,boardSize-1-hy);
-          const score=spread*1.8+built.turns*2+len*.7+edgeBalance*.08+rng()*2;
-          if(score>bestScore){bestScore=score;best={...built,dir};}
+        const trials=Math.min(700,boardSize*boardSize*5);
+        for(let t=0;t<trials;t++){
+          let hx,hy,dir;
+          // Prefer edge-facing arrow tips: their exit lane is naturally clear,
+          // allowing the board to hold more readable bent paths without overlap.
+          if(t < trials * 0.68){
+            const edge=Math.floor(rng()*4), pos=Math.floor(rng()*boardSize);
+            if(edge===0){hx=pos;hy=0;dir='up';}
+            else if(edge===1){hx=pos;hy=boardSize-1;dir='down';}
+            else if(edge===2){hx=0;hy=pos;dir='left';}
+            else {hx=boardSize-1;hy=pos;dir='right';}
+          } else { hx=Math.floor(rng()*boardSize);hy=Math.floor(rng()*boardSize);dir=DIRS[Math.floor(rng()*4)]; }
+          const b=makePath(hx,hy,dir,len); if(!b) continue;
+          const score=placeCandidate(b,dir,hx,hy,len);
+          if(score>bestScore){bestScore=score;best={...b,dir};}
         }
         chosen=best;
       }
+      // Dense-board fallback: a true three-cell L-shaped arrow, never a straight stub.
       if(!chosen){
-        // Search every possible two-cell arrow before giving up on a dense board.
-        outer:for(let y=0;y<boardSize;y++)for(let x=0;x<boardSize;x++)for(const dir of DIRS){
-          const [dx,dy]=DIR_VEC[dir],px=x-dx,py=y-dy;
-          if(px<0||px>=boardSize||py<0||py>=boardSize||occupied.has(`${x},${y}`)||occupied.has(`${px},${py}`))continue;
-          let clear=true;for(let rx=x+dx,ry=y+dy;rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize;rx+=dx,ry+=dy)if(occupied.has(`${rx},${ry}`)){clear=false;break;}
-          if(clear){chosen={path:[[px,py],[x,y]],cells:new Set([`${px},${py}`,`${x},${y}`]),dir,turns:0};break outer;}
+        let best=null,bestScore=-Infinity;
+        for(let hy=0;hy<boardSize;hy++) for(let hx=0;hx<boardSize;hx++) for(const dir of DIRS){
+          const [dx,dy]=DIR_VEC[dir], bx=hx-dx, by=hy-dy;
+          if(bx<0||bx>=boardSize||by<0||by>=boardSize) continue;
+          for(const side of [-1,1]){
+            const px=-dy*side, py=dx*side, tx=bx+px, ty=by+py;
+            if(tx<0||tx>=boardSize||ty<0||ty>=boardSize) continue;
+            const cells=[[tx,ty],[bx,by],[hx,hy]], keys=cells.map(([x,y])=>`${x},${y}`);
+            if(keys.some(k=>occupied.has(k))) continue;
+            const cellSet=new Set(keys); if(!preservesRemovalOrder(cellSet)) continue;
+            const b={path:cells,cells:cellSet,turns:1}, score=placeCandidate(b,dir,hx,hy,3);
+            if(score>bestScore){bestScore=score;best={...b,dir};}
+          }
         }
+        chosen=best;
       }
-      if(!chosen)break;
+      if(!chosen) break;
       chosen.cells.forEach(k=>occupied.add(k));
       arrows.push({id:`L${levelId}_${i+1}`,path:chosen.path,direction:chosen.dir,color:PALETTE[(i+levelId)%PALETTE.length]});
-    }
-    // If a dense random layout reaches a local dead-end, retry a guaranteed
-    // solvable compact layout from an empty board before using the partial draft.
-    if(arrows.length<target){
-      const compact=[], compactUsed=new Set(), compactRng=mulberry32(seedBaseForCompact(levelId,boardSize,target));
-      for(let i=0;i<target;i++){
-        let q=null;
-        for(let trial=0;trial<boardSize*boardSize*12&&!q;trial++){
-          const x=Math.floor(compactRng()*boardSize),y=Math.floor(compactRng()*boardSize),dir=DIRS[Math.floor(compactRng()*4)];
-          const [dx,dy]=DIR_VEC[dir],px=x-dx,py=y-dy;
-          if(px<0||px>=boardSize||py<0||py>=boardSize||compactUsed.has(`${x},${y}`)||compactUsed.has(`${px},${py}`))continue;
-          let clear=true;for(let rx=x+dx,ry=y+dy;rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize;rx+=dx,ry+=dy)if(compactUsed.has(`${rx},${ry}`)){clear=false;break;}
-          if(clear)q={x,y,px,py,dir};
-        }
-        if(!q)break;
-        compactUsed.add(`${q.x},${q.y}`);compactUsed.add(`${q.px},${q.py}`);
-        compact.push({id:`L${levelId}_${i+1}`,path:[[q.px,q.py],[q.x,q.y]],direction:q.dir,color:PALETTE[(i+levelId)%PALETTE.length]});
-      }
-      if(compact.length===target) arrows.splice(0,arrows.length,...compact);
-    }
-    // Fill remaining requested slots with clean two-cell arrows. Each added
-    // arrow has a clear exit at insertion time; reverse removal remains solvable.
-    while(arrows.length<target){
-      const choices=[];
-      for(let y=0;y<boardSize;y++)for(let x=0;x<boardSize;x++)for(const dir of DIRS){
-        const [dx,dy]=DIR_VEC[dir],px=x-dx,py=y-dy;
-        if(px<0||px>=boardSize||py<0||py>=boardSize||occupied.has(`${x},${y}`)||occupied.has(`${px},${py}`))continue;
-        let clear=true;
-        for(let rx=x+dx,ry=y+dy;rx>=0&&rx<boardSize&&ry>=0&&ry<boardSize;rx+=dx,ry+=dy){if(occupied.has(`${rx},${ry}`)){clear=false;break;}}
-        if(clear)choices.push({x,y,px,py,dir});
-      }
-      if(!choices.length)break;
-      const q=choices[Math.floor(rng()*choices.length)],idx=arrows.length;
-      occupied.add(`${q.x},${q.y}`);occupied.add(`${q.px},${q.py}`);
-      arrows.push({id:`L${levelId}_${idx+1}`,path:[[q.px,q.py],[q.x,q.y]],direction:q.dir,color:PALETTE[(idx+levelId)%PALETTE.length]});
     }
     return {id:levelId,boardSize,roomTheme:custom.room_theme||'classic',timeLimit,stars:[Math.round(timeLimit*.62),Math.round(timeLimit*.34),1],arrows};
   }
@@ -1186,7 +1183,7 @@
   // Generate board paths only when a player opens a level; this prevents the startup loader freezing on phones.
   function makeLevelMeta(id, custom = {}) {
     const boardSize = Math.max(5, Math.min(30, Number(custom.board_size) || (id <= 4 ? 5 : id <= 12 ? 6 : id <= 24 ? 7 : id <= 38 ? 8 : 9)));
-    const capacity = Math.max(3, Math.floor(boardSize * boardSize * 0.42));
+    const capacity = Math.max(3, Math.floor(boardSize * boardSize * 0.07));
     const arrowCount = Math.max(3, Math.min(capacity, Number(custom.arrow_count) || Math.min(Math.floor(boardSize * boardSize * 0.34), 2 + id + Math.floor(id / 5))));
     const timeLimit = Math.max(1, Number(custom.time_limit) || Math.max(25, 95 - Math.floor(id * 0.55) - Math.floor(arrowCount * 0.8)));
     return { id, boardSize, roomTheme: custom.room_theme || 'classic', timeLimit,
@@ -2304,12 +2301,12 @@
       grp.appendChild(hit);
 
       const outline = document.createElementNS(ns, 'path');
-      outline.setAttribute('d', d); outline.setAttribute('fill', 'none'); outline.setAttribute('stroke', 'rgba(15,35,75,.20)');
+      outline.classList.add('arrow-outline'); outline.setAttribute('d', d); outline.setAttribute('fill', 'none'); outline.setAttribute('stroke', 'rgba(15,35,75,.20)');
       outline.setAttribute('stroke-width', strokeW * 1.38); outline.setAttribute('stroke-linecap', 'round'); outline.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(outline);
 
       const shaft = document.createElementNS(ns, 'path');
-      shaft.setAttribute('d', d); shaft.setAttribute('fill', 'none'); shaft.setAttribute('stroke', arrow.color);
+      shaft.classList.add('arrow-shaft'); shaft.setAttribute('d', d); shaft.setAttribute('fill', 'none'); shaft.setAttribute('stroke', arrow.color);
       shaft.setAttribute('stroke-width', strokeW); shaft.setAttribute('stroke-linecap', 'round'); shaft.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(shaft);
 
@@ -2366,7 +2363,7 @@
       const segLens = [0];
       for (let i = 1; i < fullPts.length; i++) segLens.push(segLens[i - 1] + Math.hypot(fullPts[i][0] - fullPts[i - 1][0], fullPts[i][1] - fullPts[i - 1][1]));
       const arrowTotalLen = segLens[basePts.length - 1], maxTravel = segLens[fullPts.length - 1] - arrowTotalLen;
-      const shaft = grp.querySelectorAll('path')[1], head = grp.querySelector('polygon');
+      const shaft = grp.querySelector('.arrow-shaft'), outline = grp.querySelector('.arrow-outline'), head = grp.querySelector('polygon');
 
       const samplePointAt = (s) => {
         const clamped = Math.max(0, Math.min(segLens[segLens.length - 1], s));
@@ -2386,11 +2383,12 @@
 
       const t0 = performance.now();
       const step = (now) => {
-        const rawT = Math.min(1, (now - t0) / 260), offset = rawT * rawT * maxTravel;
+        const rawT = Math.min(1, (now - t0) / 420), eased = 1 - Math.pow(1 - rawT, 3), offset = eased * maxTravel;
         const sub = buildSubPath(offset, arrowTotalLen + offset);
-        shaft.setAttribute('d', sub.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' '));
+        const movingPath = sub.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+        shaft.setAttribute('d', movingPath); if(outline) outline.setAttribute('d', movingPath);
         head.setAttribute('points', this.buildArrowHeadPoints(sub[sub.length - 1][0], sub[sub.length - 1][1], arrow.direction, strokeW * 1.78));
-        grp.style.opacity = String(Math.max(0, 1 - Math.max(0, rawT - 0.55) / 0.45));
+        grp.style.opacity = String(Math.max(0, 1 - Math.max(0, rawT - 0.68) / 0.32));
         if (rawT < 1) requestAnimationFrame(step);
         else {
           session.arrows = session.arrows.filter(a => a.id !== arrow.id); session.animatingIds.delete(arrow.id);
