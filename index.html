@@ -2250,7 +2250,7 @@
         svg.appendChild(gGrid);
       }
 
-      const strokeW = Math.max(6.5, Math.min(13, cell * 0.22));
+      const strokeW = Math.max(2.2, Math.min(13, cell * 0.30));
       session.arrows.forEach(arrow => {
         const grp = this.createArrowSVG(arrow, cell, pad, strokeW);
         if (session.hintId === arrow.id) grp.classList.add('hint-glow');
@@ -2291,7 +2291,7 @@
       const head = document.createElementNS(ns, 'polygon');
       head.setAttribute('points', this.buildArrowHeadPoints(hx, hy, arrow.direction, strokeW * 1.78));
       head.setAttribute('fill', arrow.color); head.setAttribute('stroke', arrow.color);
-      head.setAttribute('stroke-width', '2'); head.setAttribute('stroke-linejoin', 'round');
+      head.setAttribute('stroke-width', String(Math.max(0.8, strokeW * 0.16))); head.setAttribute('stroke-linejoin', 'round');
       grp.appendChild(head);
       return grp;
     },
